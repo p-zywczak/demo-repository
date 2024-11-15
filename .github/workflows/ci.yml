@@ -28,8 +28,43 @@ jobs:
       ||
       (github.event_name == 'issue_comment' &&
         github.event.comment.body == '/ping' &&
-        github.event.issue.pull_request)  
+        github.event.issue.pull_request)
+        
     steps:
+      - name: Get data Pull Request
+        if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
+        uses: actions/github-script@v6
+        id: get_pr
+        with:
+          script: |
+            const prUrl = context.payload.issue.pull_request.url;
+            const prNumber = context.payload.issue.number;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            console.log('PR DATA', pr);
+            
+            core.setOutput('title', pr.title);
+            core.setOutput('html_url', pr.html_url);
+            core.setOutput('user_login', pr.user.login);
+
+      - name: Assign PR creator
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const prCreator = context.payload.pull_request.user.login;
+            
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              assignees: [prCreator]
+            });
+      
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
         if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
@@ -57,7 +92,7 @@ jobs:
                                   "items": [
                                     {
                                       "type": "TextBlock",
-                                      "text": "${{ github.event.pull_request.title }}",
+                                      "text": "${{ steps.get_pr.outputs.title }}",
                                       "weight": "Bolder",
                                       "size": "Large",
                                       "color": "Accent"
@@ -81,16 +116,15 @@ jobs:
                             },
                             {
                               "type": "TextBlock",
-                              "text": "Prośba o cr ${{ github.event.pull_request.html_url }}",
+                              "text": "Prośba o CR: [Link do PR](${{ steps.get_pr.outputs.html_url }})",
                               "wrap": true,
                               "size": "Medium"
                             },
                             {
                               "type": "TextBlock",
-                              "text": "Twórca PR: ${{ github.event.pull_request.user.login }}",
+                              "text": "Twórca PR: ${{ steps.get_pr.outputs.user_login }}",
                               "wrap": true,
-                              "size": "Medium",
-                              "color": "Good"
+                              "size": "Medium"
                             }
                           ],
                       "msteams": {
@@ -111,7 +145,8 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             
-            const labelsToRemove = ['CR1', 'CR2'];
+            const labelsToRemove = ['CR1', 'CR2', 'APPROVAL'];
+            
             for (const label of labelsToRemove) {
               try {
                 await github.rest.issues.removeLabel({
@@ -164,6 +199,24 @@ jobs:
               repo,
               issue_number: prNumber,
             });
+            
+            const prLabelNames = prLabels.map(label => label.name);
+            const hasCRLabel = prLabelNames.some(name => /CR/.test(name));
+            
+            if (!hasCRLabel && prLabelNames.includes('APPROVAL')) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: prNumber,
+                  name: 'APPROVAL'
+                });
+                console.log('Usunięto etykietę APPROVAL, ponieważ brakuje etykiet zawierających "CR".');
+              } catch (error) {
+                  console.error('Nie udało się usunąć etykiety APPROVAL:', error);
+                }
+              }
+
             
             const bypassLabels = ['Do Merge'];
             const hasBypassLabel = prLabels.some(label => bypassLabels.includes(label.name));
@@ -227,10 +280,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: composer run-script lint
         
-      - name: Run test
-        if: github.event_name == 'pull_request'
-        run: |
-          /vendor/bin/phpunit
+      - name: Run Migrations for Testing
+        run: php artisan migrate --env=testing
           
       - name: Run GrumPHP
         if: github.event_name == 'pull_request'
