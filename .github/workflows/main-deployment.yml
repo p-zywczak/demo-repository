@@ -58,7 +58,7 @@ jobs:
       - name: Hotfix merge to develop
         if: contains(github.event.head_commit.message, 'hotfix/')
         run: |
-          echo "Commit message: ${{ github.event.head_commit.message | fromjson | .split("/")[1] }}"
+          echo "Commit message: ${VER}"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git checkout develop
