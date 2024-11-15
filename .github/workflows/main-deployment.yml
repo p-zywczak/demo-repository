@@ -64,5 +64,5 @@ jobs:
           git fetch --all
           git checkout develop
           git pull origin develop
-          git merge hotfix/${VER} --no-ff -m "Merge hotfix branch into develop: ${{ env.VER }}"
+          git merge origin/hotfix/${VER} --no-ff -m "Merge hotfix branch into develop: ${{ env.VER }}"
           git push origin develop
