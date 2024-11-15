@@ -32,8 +32,8 @@ jobs:
 
       - name: Create Tag on Main
         run: |
-          git tag "release-${TIMESTAMP}"
-          git push origin "release-${TIMESTAMP}"
+          git tag "v${VER}"
+          git push origin "v${VER}"
 
       - name: Get current date
         id: get_date
