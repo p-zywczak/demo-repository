@@ -61,6 +61,7 @@ jobs:
           echo "Commit message: hotfix/${VER}"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git fetch --all
           git checkout develop
           git pull origin develop
           git merge hotfix/${VER} --no-ff -m "Merge hotfix branch into develop: ${{ env.VER }}"
