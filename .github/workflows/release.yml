@@ -12,7 +12,7 @@ permissions: write-all
 jobs:
   rollback_release:
     name: Rollback release
-    if: github.event_name == "pull_request" && github.event.action == "closed"
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Rollback on PRE
