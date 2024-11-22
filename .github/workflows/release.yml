@@ -4,13 +4,42 @@ on:
   push:
     branches:
       - 'release/**'
+  pull_request:
+    types: [closed]
 
 permissions: write-all
 
 jobs:
+  rollback_release:
+    name: Rollback release
+    if: github.event_name == "pull_request" && github.event.action == "closed"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback on PRE
+        uses: appleboy/ssh-action@v0.1.5
+        with: 
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/api-pre.symbionis.pl
+            git reset --hard
+            git fetch --all
+            release_branches=$(git branch -r | grep 'release/' | sed 's/origin\///' | sort -V | sed 's/^[[:space:]]*//')
+            echo "Release branches found:"
+            echo "$release_branches"
+            previous_branch=$(echo "$release_branches" | grep -B1 "$(git branch --show-current)" | head -n 1 | sed 's/^[[:space:]]*//')
+            if [ -z "$previous_branch" ]; then
+              echo "Error: Could not find the previous release branch."
+              exit 1
+            fi
+            echo "Previous release branch: $previous_branch"
+            git checkout "$previous_branch"
+    
   deploy-to-pre:
     name: Deploy to Pre Server
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -19,6 +48,7 @@ jobs:
     name: Create Pull Request to Main
     needs: deploy-to-pre
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
