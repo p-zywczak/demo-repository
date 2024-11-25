@@ -25,6 +25,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             pwd
+            dir
             cd /var/www/test/demo-repository-2
             git reset --hard
             git fetch --all
