@@ -65,6 +65,7 @@ jobs:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: |
           echo "Branch zamknięty w PR #${{ github.event.pull_request.number }}" >> .pr_status
+          git fetch --all
           git checkout $BASE_BRANCH
           git pull origin $BASE_BRANCH
           git add .pr_status
