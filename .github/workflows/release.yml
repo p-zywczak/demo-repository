@@ -38,11 +38,19 @@ jobs:
             previous_branch=$(echo "$release_branches" | grep -B1 "$current_branch" | head -n 1 | sed 's/^[[:space:]]*//')
 
             while [ ! -z "$previous_branch" ]; do
-              if git show "$previous_branch:.pr_status" | grep -q "Branch zamknięty"; then
+              echo "Sprawdzam branch: $previous_branch"
+              if git show "$previous_branch:.pr_status"; then
                 echo "Branch $previous_branch jest oznaczony jako zamknięty. Szukam wcześniejszego."
-                previous_branch=$(echo "$release_branches" | grep -B2 "$current_branch" | head -n 1 | sed 's/^[[:space:]]*//')
-                current_branch=$previous_branch
+                previous_branch=$(echo "$release_branches" | grep -B1 "$previous_branch" | head -n 1 | sed 's/^[[:space:]]*//')
+            
+                # Jeśli brak wcześniejszych branchy, zakończ pętlę
+                if [ -z "$previous_branch" ]; then
+                  echo "Brak dostępnych branchy. Rollback nie jest możliwy."
+                  exit 1
+                fi
               else
+                # Jeśli branch nie jest oznaczony jako zamknięty, zakończ pętlę
+                echo "Branch $previous_branch nie jest zamknięty. Rollback do tego brancha."
                 break
               fi
             done
