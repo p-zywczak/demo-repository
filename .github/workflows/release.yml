@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/api-pre242.pl
+            cd /var/www/test
             git reset --hard
             git fetch --all
             release_branches=$(git branch -r | grep 'release/' | sed 's/origin\///' | sort -V | sed 's/^[[:space:]]*//')
