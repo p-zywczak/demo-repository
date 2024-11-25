@@ -62,7 +62,7 @@ jobs:
           
       - name: Mark branch as closed
         env:
-          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           echo "Branch zamknięty w PR #${{ github.event.pull_request.number }}" >> .pr_status
           git fetch --all
