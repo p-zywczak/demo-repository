@@ -25,6 +25,10 @@ jobs:
             VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
           else
             VERSION=${{ inputs.version }}
+            if ! git rev-parse "refs/tags/$VERSION" >/dev/null 2>&1; then
+              echo "ERROR: The specified version '$VERSION' does not exist as a tag in the repository."
+              exit 1
+            fi
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           
