@@ -120,10 +120,8 @@ jobs:
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
 
-      - name: Fetch tasks in Awaiting Release
-        run: |
-          RESPONSE=$(gajira search -jql "status='Awaiting Release'")
-
-          echo "$RESPONSE" | jq '.issues[].key' > jira_tasks.txt
-          echo "Fetched tasks:"
-          cat jira_tasks.txt
+      - name: Fetch tasks in "Awaiting Release"
+        id: fetch-jira-tasks
+        uses: atlassian/gajira-run-query@v1
+        with:
+          jql: status = "Awaiting Release"
