@@ -3,6 +3,10 @@ name: Deploy to Demo
 on:
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Use workflow from'
+        required: true
+        default: 'develop'
       version:
         description: 'Choose version to deploy (v1.0.0)'
         required: true
