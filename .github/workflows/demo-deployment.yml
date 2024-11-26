@@ -1,0 +1,49 @@
+name: Deploy to Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Choose version to deploy (v1.0.0)'
+        required: true
+        default: 'latest'
+
+jobs:
+  deploy-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Validate version input
+        run: |
+          if [[ "${{ inputs.version }}" == "latest" ]]; then
+            VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+          else
+            VERSION=${{ inputs.version }}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+      - name: Deploy to Demo Server
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/test/demo-repository-1
+            git reset --hard
+            git fetch --tags
+            git checkout main
+            git pull
+            git checkout "$VERSION"
+            composer install --ignore-platform-req=ext-xdebug --ignore-platform-req=ext-ldap
+            php artisan migrate
+            php artisan config:clear
+
+            
+
+
+
+        
