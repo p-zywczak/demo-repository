@@ -120,9 +120,6 @@ jobs:
           email: ${{ secrets.JIRA_USER }}
           api-token: ${{ secrets.JIRA_TOKEN }}
 
-      - name: Fetch tasks in Awaiting Release status
-        id: fetch-jira-tasks
-
       - name: Fetch tasks in Awaiting Release
         run: |
           RESPONSE=$(gajira search -jql "status='Awaiting Release'")
