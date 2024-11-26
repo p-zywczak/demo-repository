@@ -29,7 +29,7 @@ jobs:
               exit 1
             fi
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
 
       - name: Switch branch to Dev Server
         uses: appleboy/ssh-action@v0.1.5
