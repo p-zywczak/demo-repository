@@ -112,3 +112,21 @@ jobs:
           title: "Merge ${{ github.ref_name }} into main"
           labels: |
             RELEASE
+            
+      - name: Log in to JIRA
+        uses: atlassian/gajira-login@v3
+        with:
+          site: ${{ secrets.JIRA_URL }}
+          email: ${{ secrets.JIRA_USER }}
+          api-token: ${{ secrets.JIRA_TOKEN }}
+
+      - name: Fetch tasks in Awaiting Release status
+        id: fetch-jira-tasks
+
+      - name: Fetch tasks in Awaiting Release
+        run: |
+          RESPONSE=$(gajira search -jql "status='Awaiting Release'")
+
+          echo "$RESPONSE" | jq '.issues[].key' > jira_tasks.txt
+          echo "Fetched tasks:"
+          cat jira_tasks.txt
