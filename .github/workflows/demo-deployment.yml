@@ -43,7 +43,4 @@ jobs:
             git fetch --tags
             git checkout main
             git pull
-            git checkout $VERSION
-            composer install --no-dev --ignore-platform-req=ext-xdebug --ignore-platform-req=ext-ldap
-            php artisan migrate
-            php artisan config:clear
+            git checkout ${{ env.VERSION }}
