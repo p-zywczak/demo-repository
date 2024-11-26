@@ -115,10 +115,10 @@ jobs:
             
       - name: Log in to JIRA
         uses: atlassian/gajira-login@v3
-        with:
-          site: ${{ secrets.JIRA_URL }}
-          email: ${{ secrets.JIRA_USER }}
-          api-token: ${{ secrets.JIRA_TOKEN }}
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
 
       - name: Fetch tasks in Awaiting Release
         run: |
