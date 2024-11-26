@@ -19,12 +19,20 @@ jobs:
       - name: Validate version input
         run: |
           if [[ "${{ inputs.version }}" == "latest" ]]; then
+            echo "Determining latest version..."
             VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
           else
             VERSION=${{ inputs.version }}
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           
+      - name: Verify VERSION is set
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "ERROR: VERSION is not set. Aborting."
+            exit 1
+          fi
+
       - name: Deploy to Demo Server
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -32,18 +40,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "Deploying version: $VERSION"
             cd /var/www/test/demo-repository-1
             git reset --hard
             git fetch --tags
             git checkout main
             git pull
             git checkout "$VERSION"
-            composer install --ignore-platform-req=ext-xdebug --ignore-platform-req=ext-ldap
+            composer install --no-dev --ignore-platform-req=ext-xdebug --ignore-platform-req=ext-ldap
             php artisan migrate
             php artisan config:clear
-
-            
-
-
-
-        
