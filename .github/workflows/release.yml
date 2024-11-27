@@ -166,7 +166,7 @@ jobs:
           contentType: 'application/json'
           data: |
             {
-              "name": "${{ env.RELEASE_VERSION }}",
+              "name": "[${{ vars.ENVIRONMENT }}] ${{ env.RELEASE_VERSION }}",
               "projectId": "${{ secrets.JIRA_PROJECT_ID }}",
               "released": false
             }
