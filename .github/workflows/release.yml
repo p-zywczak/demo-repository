@@ -128,7 +128,7 @@ jobs:
       - name: Find Issues in Awaiting Release
         id: find-issues
         run: |
-          jira ls -q 'status = "AWAITING TO RELEASE"' --plain > jira_tasks.txt
+          jira ls -q 'status = "AWAITING TO RELEASE"' > jira_tasks.txt
           if [ ! -s jira_tasks.txt ]; then
             echo "No issues found with status 'AWAITING TO RELEASE'."
             exit 0
