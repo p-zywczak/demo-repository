@@ -153,17 +153,20 @@ jobs:
 
       - name: Create Release in JIRA
         id: create_release
-        run: |
-          curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/version" \
-            -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-                  "name": "${{ env.RELEASE_VERSION }}",
-                  "projectId": "${{ secrets.JIRA_PROJECT_ID }}",
-                  "released": false
-                }'
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/version'
+          method: 'POST'
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
+          headers: |
+            Content-Type: application/json
+          body: |
+            {
+              "name": "${{ env.RELEASE_VERSION }}",
+              "projectId": "${{ secrets.JIRA_PROJECT_ID }}",
+              "released": false
+            }
         env:
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USER: ${{ secrets.JIRA_USER }}
-          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+
