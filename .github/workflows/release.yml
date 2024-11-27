@@ -119,7 +119,12 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
-
+          
+      - name: Setup Jira CLI
+        uses: atlassian/gajira-cli@v3
+        with:
+          version: 1.0.27
+          
       - name: Find Issues in Awaiting Release
         id: find-issues
         run: |
