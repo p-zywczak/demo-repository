@@ -157,16 +157,16 @@ jobs:
         with:
           url: '${{ secrets.JIRA_URL }}/rest/api/3/version'
           method: 'POST'
-          username: ${{ secrets.JIRA_USER }}
-          password: ${{ secrets.JIRA_TOKEN }}
-          headers: |
-            Content-Type: application/json
-          body: |
+          contentType: 'application/json'
+          data: |
             {
               "name": "${{ env.RELEASE_VERSION }}",
               "projectId": "${{ secrets.JIRA_PROJECT_ID }}",
               "released": false
             }
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+
 
