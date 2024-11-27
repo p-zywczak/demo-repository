@@ -120,3 +120,6 @@ jobs:
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
+
+      - name: Print Response
+        run: echo "${{ steps.fetch.outputs.response }}"          
