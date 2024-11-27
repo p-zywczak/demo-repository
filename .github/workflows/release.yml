@@ -114,6 +114,7 @@ jobs:
             RELEASE
 
       - name: Fetch JIRA Tasks
+        id: fetch
         uses: fjogeleit/http-request-action@v1
         with:
           url: '${{ secrets.JIRA_URL }}/rest/api/3/search?jql=status="AWAITING TO RELEASE"'
