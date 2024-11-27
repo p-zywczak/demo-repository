@@ -113,6 +113,12 @@ jobs:
           labels: |
             RELEASE
 
+  jira-release:
+      name: Create release on JIRA
+      needs: create-pull-request
+      runs-on: ubuntu-latest   
+      if: startsWith(github.ref, 'refs/heads/release/')
+      steps:
       - name: Fetch JIRA Tasks
         id: fetch
         uses: fjogeleit/http-request-action@v1
@@ -168,5 +174,3 @@ jobs:
           password: ${{ secrets.JIRA_TOKEN }}
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-
-
