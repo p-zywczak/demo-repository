@@ -122,6 +122,11 @@ jobs:
 
       - name: Find Issues in Awaiting Release
         id: find-issues
-        uses: atlassian/gajira-find-issue-key@v3
-        with:
-          jql: status = "AWAITING TO RELEASE"
+        run: |
+          jira ls -q 'status = "AWAITING TO RELEASE"' --plain > jira_tasks.txt
+          if [ ! -s jira_tasks.txt ]; then
+            echo "No issues found with status 'AWAITING TO RELEASE'."
+            exit 0
+          fi
+          echo "Found issues:"
+          cat jira_tasks.txt
