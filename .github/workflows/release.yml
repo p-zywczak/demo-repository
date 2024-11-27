@@ -96,6 +96,9 @@ jobs:
     name: Create Pull Request to Main
     needs: deploy-to-pre
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        issue: ${{ fromJson(env.ISSUE_KEYS).split(",") }}    
     if: startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
@@ -122,10 +125,18 @@ jobs:
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
           
-      - name: Print Response
-        run: echo "${{ steps.fetch.outputs.response }}"
-
       - name: Extract Issue Keys
         id: extract
         run: |
           echo "ISSUE_KEYS=$(echo '${{ steps.fetch.outputs.response }}' | jq -r '.issues[].key' | paste -sd "," -)" >> $GITHUB_ENV
+
+      - name: Update Task Status
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/issue/${{ matrix.issue }}/transitions'
+          method: 'POST'
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
+          contentType: 'application/json'
+          data: '{"transition": {"id": "10004"}}'
+
