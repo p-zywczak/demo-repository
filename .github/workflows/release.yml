@@ -122,5 +122,7 @@ jobs:
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
 
-      - name: Print Response
-        run: echo "${{ steps.fetch.outputs.response }}"          
+      - name: Extract Issue Keys
+        id: extract
+        run: |
+          echo "ISSUE_KEYS=$(echo '${{ steps.fetch.outputs.response }}' | jq -r '.issues[].key' | paste -sd "," -)" >> $GITHUB_ENV
