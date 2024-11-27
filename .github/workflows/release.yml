@@ -123,7 +123,7 @@ jobs:
         id: fetch
         uses: fjogeleit/http-request-action@v1
         with:
-          url: '${{ secrets.JIRA_URL }}/rest/api/3/search?jql=status="AWAITING TO RELEASE" AND labels="Backend"'
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/search?jql=status="AWAITING TO RELEASE" AND labels="${{ vars.ENVIRONMENT }}"'
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
