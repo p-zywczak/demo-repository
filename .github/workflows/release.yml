@@ -95,10 +95,7 @@ jobs:
   create-pull-request:
     name: Create Pull Request to Main
     needs: deploy-to-pre
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        issue: ${{ fromJson(env.ISSUE_KEYS).split(",") }}    
+    runs-on: ubuntu-latest   
     if: startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
@@ -129,14 +126,22 @@ jobs:
         id: extract
         run: |
           echo "ISSUE_KEYS=$(echo '${{ steps.fetch.outputs.response }}' | jq -r '.issues[].key' | paste -sd "," -)" >> $GITHUB_ENV
+        env:
+          JIRA_RESPONSE: ${{ steps.fetch.outputs.response }}
 
-      - name: Update Task Status
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: '${{ secrets.JIRA_URL }}/rest/api/3/issue/${{ matrix.issue }}/transitions'
-          method: 'POST'
-          username: ${{ secrets.JIRA_USER }}
-          password: ${{ secrets.JIRA_TOKEN }}
-          contentType: 'application/json'
-          data: '{"transition": {"id": "10004"}}'
+      - name: Update Task Status for Each Issue
+        run: |
+          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+            echo "Updating issue $ISSUE..."
+            curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE/transitions" \
+              -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"transition": {"id": "10004"}}'
+          done
+        env:
+          ISSUE_KEYS: ${{ env.ISSUE_KEYS }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+
 
