@@ -112,26 +112,15 @@ jobs:
           title: "Merge ${{ github.ref_name }} into main"
           labels: |
             RELEASE
-            
-      - name: Log in to JIRA
-        uses: atlassian/gajira-login@v3
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
-          
-      - name: Setup Jira CLI
-        uses: atlassian/gajira-cli@v3
+
+      - name: Fetch JIRA Tasks
+        uses: fjogeleit/http-request-action@v1
         with:
-          version: 1.0.27
-          
-      - name: Find Issues in Awaiting Release
-        id: find-issues
-        run: |
-          jira ls -q 'status = "AWAITING TO RELEASE"' > jira_tasks.txt
-          if [ ! -s jira_tasks.txt ]; then
-            echo "No issues found with status 'AWAITING TO RELEASE'."
-            exit 0
-          fi
-          echo "Found issues:"
-          cat jira_tasks.txt
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/search'
+          method: 'GET'
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
+          body: >
+            {
+              "jql": "status = 'AWAITING TO RELEASE'"
+            }
