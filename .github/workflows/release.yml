@@ -144,4 +144,26 @@ jobs:
           JIRA_USER: ${{ secrets.JIRA_USER }}
           JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
 
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
 
+      - name: Create Release in JIRA
+        id: create_release
+        run: |
+          curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/version" \
+            -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "name": "${{ env.RELEASE_VERSION }}",
+                  "projectId": "${{ secrets.JIRA_PROJECT_ID }}",
+                  "released": false
+                }'
+        env:
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
