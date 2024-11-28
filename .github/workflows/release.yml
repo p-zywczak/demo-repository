@@ -15,21 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Deploy to Test Server via SSH
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/test/demo-repository-1
-            git fetch
-            git checkout ${{ github.ref_name }}
-            git pull
-            composer install
-            php artisan migrate
-            php artisan config:clear
-
   create-pull-request:
     name: Create Pull Request to Main
     needs: deploy-to-pre
@@ -47,3 +32,5 @@ jobs:
           base: main
           branch: ${{ github.ref }}
           title: "Merge ${{ github.ref_name }} into main"
+          labels: |
+            RELEASE

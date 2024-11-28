@@ -35,22 +35,6 @@ jobs:
           git tag "v${VER}"
           git push origin "v${VER}"
 
-      - name: Deploy to Prod Server via SSH
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/test/demo-repository-2
-            git fetch --tags
-            git checkout main
-            git pull
-            git checkout "v${{ env.VER }}"
-            composer install
-            php artisan migrate
-            php artisan config:clear
-
       - name: Get current date
         id: get_date
         run: |
@@ -71,109 +55,14 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Microsoft Teams Notification
-        uses: skitionek/notify-microsoft-teams@master
-        if: always()
-        with:
-            webhook_url: ${{ secrets.MSTEAMS_WEBHOOK_RELEASE }}
-            raw: >-
-              {
-                "type": "message",
-                "attachments":
-                  [
-                    {
-                      "contentType": "application/vnd.microsoft.card.adaptive",
-                      "content":
-                        {
-                          "type": "AdaptiveCard",
-                          "version": "1.2",
-                          "body":
-                            [
-                              {
-                                "type": "ColumnSet",
-                                "columns": [
-                                  {
-                                    "type": "Column",
-                                    "width": "stretch",
-                                    "items": [
-                                      {
-                                        "type": "TextBlock",
-                                        "text": "${{ vars.ENVIRONMENT }} Release v${{ env.VER }}",
-                                        "weight": "Bolder",
-                                        "size": "Large",
-                                        "color": "Good"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "Column",
-                                    "width": "auto",
-                                    "items": [
-                                      {
-                                        "type": "Image",
-                                        "url": "https://img.icons8.com/color/48/000000/checked--v1.png",
-                                        "size": "Small",
-                                        "horizontalAlignment": "Right",
-                                        "altText": "Zielona Fajka"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              {
-                                "type": "TextBlock",
-                                "text": "Najnowsza wersja v${{ env.VER }} została wdrożona na serwery DEMO oraz PROD.",
-                                "wrap": true,
-                                "size": "Medium"
-                              },
-                              {
-                                "type": "TextBlock",
-                                "text": "Data i czas release: ${{ env.RELEASE_DATE }}",
-                                "wrap": true,
-                                "size": "Small",
-                                "color": "Accent"
-                              },
-                              {
-                                  "type": "ActionSet",
-                                  "actions": [
-                                      {
-                                          "type": "Action.ToggleVisibility",
-                                          "title": "Changelog",
-                                          "targetElements": ["changelogContainer"]
-                                      }
-                                  ]
-                              },
-                              {
-                                  "type": "Container",
-                                  "id": "changelogContainer",
-                                  "isVisible": false,
-                                  "items": [
-                                      {
-                                          "type": "TextBlock",
-                                          "text": "Changelog:",
-                                          "weight": "Bolder",
-                                          "size": "Medium"
-                                      },
-                                      {
-                                          "type": "TextBlock",
-                                          "text": "${{ env.CHANGELOG }}",
-                                          "wrap": true
-                                      }
-                                  ]
-                              }
-                            ],
-                          "actions": []
-                        }
-                    }
-                  ]
-              }
-
       - name: Hotfix merge to develop
         if: contains(github.event.head_commit.message, 'hotfix/')
         run: |
+          echo "Commit message: hotfix/${VER}"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git fetch --all
           git checkout develop
           git pull origin develop
-          git merge main --no-ff -m "Merge main into develop after hotfix v${{ env.VER }}"
+          git merge origin/hotfix/${VER} --no-ff -m "Merge hotfix branch into develop: ${{ env.VER }}"
           git push origin develop
