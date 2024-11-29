@@ -12,7 +12,7 @@ on:
 permissions: write-all
 
 concurrency:
-  group: 'ci_cd'
+  group: 'ci_cd-${{ github.ref }}'
   cancel-in-progress: false
   
 jobs:
