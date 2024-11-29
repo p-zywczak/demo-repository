@@ -11,6 +11,10 @@ on:
     
 permissions: write-all
 
+concurrency:
+  group: 'ci_cd'
+  cancel-in-progress: false
+  
 jobs:
   ci_cd:
     runs-on: ubuntu-latest
