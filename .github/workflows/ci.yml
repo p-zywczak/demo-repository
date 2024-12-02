@@ -10,10 +10,6 @@ on:
     types: [created]
     
 permissions: write-all
-
-concurrency:
-  group: 'ci_cd-${{ github.ref }}'
-  cancel-in-progress: false
   
 jobs:
   ci_cd:
