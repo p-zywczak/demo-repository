@@ -32,6 +32,8 @@ jobs:
         github.event.issue.pull_request)
         
     steps:
+      - uses: actions/checkout@v2
+      - uses: ahmadnassri/action-workflow-queue@v1
       - name: Get data Pull Request
         if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
         uses: actions/github-script@v6
