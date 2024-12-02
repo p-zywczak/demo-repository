@@ -14,7 +14,6 @@ permissions: write-all
 jobs:
   ci_cd:
     runs-on: ubuntu-latest
-    concurrency: deploy
     if: >
       (github.event_name == 'pull_request' &&
         github.event.pull_request.base.ref == 'develop' &&
