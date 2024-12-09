@@ -28,9 +28,9 @@ jobs:
           REPO_OWNER="p-zywczak"  # Zastąp nazwą organizacji lub użytkownika
           REPO_NAME="demo-repository-2"      # Zastąp nazwą repozytorium
 
-          LATEST_TAG=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/tags --jq '.[0].name')
+          LATEST_TAG_OTHER_REPO=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/tags --jq '.[0].name')
 
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV          
+          echo "LATEST_TAG_OTHER_REPO=$LATEST_TAG_OTHER_REPO" >> $GITHUB_ENV          
 
       - name: Extract Version from Commit Message
         id: extract_version
@@ -42,6 +42,19 @@ jobs:
           fi
           echo "VER=$VERSION" >> $GITHUB_ENV
 
+      - name: Compare and set tag version
+        id: compare_versions
+        run: |
+          echo "Extracted version: $VER"
+          echo "Latest tag in other repo: $LATEST_TAG_OTHER_REPO"
+          
+          if [ "$(echo $VER | sed 's/[^0-9]*//g')" -le "$(echo $LATEST_TAG_OTHER_REPO | sed 's/[^0-9]*//g')" ]; then
+            echo "Using version from other repo: $LATEST_TAG"
+            echo "VER=$LATEST_TAG_OTHER_REPO" >> $GITHUB_ENV
+          else
+            echo "Using version from commit message: $VER"
+          fi
+          
       - name: Create Tag on Main
         run: |
           git tag "v${VER}"
