@@ -36,10 +36,8 @@ jobs:
           else
             # Wyciągnij wersje, posortuj i wybierz najnowszą
             LATEST_RELEASE_BRANCH_OTHER_REPO=$(echo "$RELEASE_BRANCHES" | sed 's|release/||' | sort -V | tail -n1)
-            echo "LATEST_RELEASE_BRANCH_OTHER_REPO=${LATEST_RELEASE_BRANCH_SECOND_REPO}" >> $GITHUB_ENV
-          fi
-
-          echo "LATEST_RELEASE_BRANCH_OTHER_REPO=${LATEST_RELEASE_BRANCH_SECOND_REPO}" >> $GITHUB_ENV      
+            echo "LATEST_RELEASE_BRANCH_OTHER_REPO=${LATEST_RELEASE_BRANCH_OTHER_REPO}" >> $GITHUB_ENV
+          fi  
 
       - name: Extract Version from Commit Message
         id: extract_version
