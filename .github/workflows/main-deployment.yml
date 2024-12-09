@@ -22,6 +22,8 @@ jobs:
 
       - name: Fetch Tags from Other Repository
         id: fetch_tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REPO_OWNER="p-zywczak"  # Zastąp nazwą organizacji lub użytkownika
           REPO_NAME="demo-repository-2"      # Zastąp nazwą repozytorium
