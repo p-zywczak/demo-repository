@@ -72,16 +72,15 @@ jobs:
       - name: Create Release Branch
         if: env.CREATE_EMPTY_RELEASE == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.TOKEN_PAT }}
         run: |
           LATEST_RELEASE_SHA=$(gh api repos/p-zywczak/demo-repository-2/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
           echo "$VER"
           echo $LATEST_RELEASE_SHA
-          curl -X POST \
-               -H "Authorization: token $GH_TOKEN" \
-               -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/repos/p-zywczak/demo-repository-2/git/refs \
-               -d '{"ref":"refs/heads/release/9.8.0","sha":"5cc5888b957676758e78c7f7d341e0740e7c19f2"}'
+          gh api repos/p-zywczak/demo-repository-2/git/refs -X POST \
+            -F ref="refs/heads/release/${VER}" \
+            -F sha="${LATEST_RELEASE_SHA}"
+            -H "Authorization: token $GH_TOKEN"
 
             
       - name: Get current date
