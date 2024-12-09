@@ -69,7 +69,7 @@ jobs:
         run: |
           echo "Creating release branch for version ${VER} based on the latest release branch."
           git fetch --all
-          LATEST_RELEASE_BRANCH=$(git branch -r | grep -E '^[[:space:]]*origin/release/[0-9]+\.[0-9]+\.[0-9]+$' | sed 's|origin/release/||' | sort -V | tail -n1)
+          LATEST_RELEASE_BRANCH=$(git branch -r | grep -E '^[[:space:]]*origin/release/[0-9]+\.[0-9]+\.[0-9]+$' | sed -E 's|^[[:space:]]*origin/release/||' | sort -V | tail -n1)
           echo "Latest release branch found: ${LATEST_RELEASE_BRANCH}"
 
           if [ -z "${LATEST_RELEASE_BRANCH}" ]; then
