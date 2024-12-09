@@ -20,6 +20,16 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Fetch Tags from Other Repository
+        id: fetch_tags
+        run: |
+          REPO_OWNER="p-zywczak"  # Zastąp nazwą organizacji lub użytkownika
+          REPO_NAME="demo-repository-2"      # Zastąp nazwą repozytorium
+
+          LATEST_TAG=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/tags --jq '.[0].name')
+
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV          
+
       - name: Extract Version from Commit Message
         id: extract_version
         run: |

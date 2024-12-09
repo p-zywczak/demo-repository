@@ -4,13 +4,90 @@ on:
   push:
     branches:
       - 'release/**'
+  pull_request:
+    types: [closed]
 
 permissions: write-all
 
 jobs:
+  rollback_release:
+    name: Rollback release
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Rollback on PRE
+        uses: appleboy/ssh-action@v0.1.5
+        with: 
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            pwd
+            dir
+            cd /var/www/test/demo-repository-2
+            git reset --hard
+            git fetch --all
+            release_branches=$(git branch -r | grep 'release/' | sed 's/origin\///' | sort -V | sed 's/^[[:space:]]*//')
+            echo "Release branches found:"
+            echo "$release_branches"
+            
+            current_branch=$(git branch --show-current)
+            echo "Current branch: $current_branch"
+            previous_branch=$(echo "$release_branches" | grep -B1 "$current_branch" | head -n 1 | sed 's/^[[:space:]]*//')
+            git checkout "$previous_branch"
+            git pull 
+
+            while [ ! -z "$previous_branch" ]; do
+              echo "Sprawdzam branch: $previous_branch"
+              git checkout "$previous_branch"
+              git pull 
+              if git show "$previous_branch:.pr_status"; then
+                echo "Branch $previous_branch jest oznaczony jako zamknięty. Szukam wcześniejszego."
+                previous_branch=$(echo "$release_branches" | grep -B1 "$previous_branch" | head -n 1 | sed 's/^[[:space:]]*//')
+            
+                # Jeśli brak wcześniejszych branchy, zakończ pętlę
+                if [ -z "$previous_branch" ]; then
+                  echo "Brak dostępnych branchy. Rollback nie jest możliwy."
+                  exit 1
+                fi
+              else
+                # Jeśli branch nie jest oznaczony jako zamknięty, zakończ pętlę
+                echo "Branch $previous_branch nie jest zamknięty. Rollback do tego brancha."
+                break
+              fi
+            done
+
+            if [ -z "$previous_branch" ]; then
+              echo "Error: Nie znaleziono dostępnego brancha do rollbacku."
+              exit 1
+            fi
+
+            echo "Previous release branch: $previous_branch"
+            git checkout "$previous_branch"
+            
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "actions@github.com"
+          
+      - name: Mark branch as closed
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "Branch zamknięty w PR #${{ github.event.pull_request.number }}" >> .pr_status
+          git fetch --all
+          git checkout $BASE_BRANCH
+          git pull origin $BASE_BRANCH
+          git add .pr_status
+          git commit -m "Oznaczenie PR zamkniętego: #${{ github.event.pull_request.number }}"
+          git push origin $BASE_BRANCH
+          
   deploy-to-pre:
     name: Deploy to Pre Server
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -18,7 +95,8 @@ jobs:
   create-pull-request:
     name: Create Pull Request to Main
     needs: deploy-to-pre
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   
+    if: startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -34,3 +112,87 @@ jobs:
           title: "Merge ${{ github.ref_name }} into main"
           labels: |
             RELEASE
+
+  jira-release:
+      name: Create release on JIRA
+      needs: create-pull-request
+      runs-on: ubuntu-latest   
+      if: startsWith(github.ref, 'refs/heads/release/')
+      steps:
+      - name: Fetch JIRA Tasks
+        id: fetch
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/search?jql=status="AWAITING TO RELEASE" AND labels="${{ vars.ENVIRONMENT }}"'
+          method: 'GET'
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
+          
+      - name: Extract Issue Keys
+        id: extract
+        run: |
+          echo "ISSUE_KEYS=$(echo '${{ steps.fetch.outputs.response }}' | jq -r '.issues[].key' | paste -sd "," -)" >> $GITHUB_ENV
+        env:
+          JIRA_RESPONSE: ${{ steps.fetch.outputs.response }}
+
+      - name: Update Task Status for Each Issue
+        run: |
+          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+            echo "Updating issue $ISSUE..."
+            curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE/transitions" \
+              -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"transition": {"id": "3"}}'
+          done
+        env:
+          ISSUE_KEYS: ${{ env.ISSUE_KEYS }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: Create Release in JIRA
+        id: create_release
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/version'
+          method: 'POST'
+          contentType: 'application/json'
+          data: |
+            {
+              "name": "[${{ vars.ENVIRONMENT }}] ${{ env.RELEASE_VERSION }}",
+              "projectId": "${{ secrets.JIRA_PROJECT_ID }}",
+              "released": false
+            }
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+
+      - name: Assign Issues to Release
+        run: |
+          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+            echo "Assigning issue $ISSUE to release $RELEASE_VERSION..."
+            curl -X PUT "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE" \
+              -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                    "update": {
+                      "fixVersions": [
+                        {"add": {"name": "${{ env.RELEASE_VERSION }}"}}
+                      ]
+                    }
+                  }'
+          done
+        env:
+          ISSUE_KEYS: ${{ env.ISSUE_KEYS }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}   

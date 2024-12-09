@@ -1,0 +1,52 @@
+name: Deploy to Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Choose version to deploy (v1.0.0)'
+        required: true
+        default: 'latest'
+
+jobs:
+  deploy-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate version input
+        run: |
+          if [[ "${{ inputs.version }}" == "latest" ]]; then
+            echo "Determining latest version..."
+            VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+          else
+            VERSION=${{ inputs.version }}
+            if ! git rev-parse "refs/tags/$VERSION" >/dev/null 2>&1; then
+              echo "ERROR: The specified version '$VERSION' does not exist as a tag in the repository."
+              exit 1
+            fi
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+      - name: Verify VERSION is set
+        run: |
+          echo "Deploying version: $VERSION"
+
+      - name: Deploy to Demo Server
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Deploying version: $VERSION"
+            cd /var/www/test/demo-repository-1
+            git reset --hard
+            git fetch --tags
+            git checkout main
+            git pull
+            git checkout ${{ env.VERSION }}
