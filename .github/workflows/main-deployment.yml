@@ -69,7 +69,7 @@ jobs:
           git tag "v${VER}"
           git push origin "v${VER}"
 
-      - name: Create Release Branch
+      - name: Create Empty Release Branch
         if: env.CREATE_EMPTY_RELEASE == 'true'
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}
@@ -79,9 +79,14 @@ jobs:
           echo $LATEST_RELEASE_SHA
           gh api repos/p-zywczak/demo-repository-2/git/refs -X POST \
             -F ref="refs/heads/release/${VER}" \
-            -F sha="${LATEST_RELEASE_SHA}"
+            -F sha="${LATEST_RELEASE_SHA}" \
             -H "Authorization: token $GH_TOKEN"
-
+            
+          MAIN_SHA=$(gh api repos/p-zywczak/demo-repository-2/git/refs/heads/main --jq '.object.sha')
+          gh api repos/p-zywczak/demo-repository-2/git/refs -X POST \
+            -F ref="refs/tags/v${VER}" \
+            -F sha="${MAIN_SHA}" \
+            -H "Authorization: token $GH_TOKEN"
             
       - name: Get current date
         id: get_date
