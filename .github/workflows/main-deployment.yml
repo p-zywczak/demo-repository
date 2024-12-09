@@ -75,7 +75,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LATEST_RELEASE_SHA=$(gh api repos/p-zywczak/demo-repository-2/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
-          echo "czy jest ?"
+          echo "$VER"
           echo $LATEST_RELEASE_SHA
           gh api repos/p-zywczak/demo-repository-2/git/refs -X POST \
             -F ref="refs/heads/release/${VER}" \
