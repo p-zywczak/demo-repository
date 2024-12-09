@@ -28,7 +28,7 @@ jobs:
           REPO_OWNER="p-zywczak"  # Zastąp nazwą organizacji lub użytkownika
           REPO_NAME="demo-repository-2"      # Zastąp nazwą repozytorium
 
-          LATEST_TAG_OTHER_REPO=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/tags --jq '.[0].name')
+          LATEST_TAG_OTHER_REPO=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/tags --jq '.[0].name | sub("^v"; "")')
 
           echo "LATEST_TAG_OTHER_REPO=$LATEST_TAG_OTHER_REPO" >> $GITHUB_ENV          
 
@@ -48,17 +48,37 @@ jobs:
           echo "Extracted version: $VER"
           echo "Latest tag in other repo: $LATEST_TAG_OTHER_REPO"
           
-          if [ "$(echo $VER | sed 's/[^0-9]*//g')" -le "$(echo $LATEST_TAG_OTHER_REPO | sed 's/[^0-9]*//g')" ]; then
-            echo "Using version from other repo: $LATEST_TAG"
-            echo "VER=$LATEST_TAG_OTHER_REPO" >> $GITHUB_ENV
+          SMALLER_VERSION=$(printf '%s\n%s' "${LATEST_TAG_OTHER_REPO}" "${VER}" | sort -V | head -n1)
+
+          if [ "${SMALLER_VERSION}" = "${VER}" ]; then
+            echo "Using version from other repo: ${LATEST_TAG_OTHER_REPO}"
+            echo "VER=${LATEST_TAG_OTHER_REPO}" >> $GITHUB_ENV
+            echo "FROM_OTHER_REPO=true" >> $GITHUB_ENV
           else
-            echo "Using version from commit message: $VER"
+            echo "Using version from commit message: ${VER}"
+            echo "FROM_OTHER_REPO=false" >> $GITHUB_ENV
           fi
           
       - name: Create Tag on Main
         run: |
           git tag "v${VER}"
           git push origin "v${VER}"
+
+      - name: Create Release Branch
+        if: env.FROM_OTHER_REPO == 'true'
+        run: |
+          echo "Creating release branch for version ${VER} based on the latest release branch."
+          git fetch --all
+          LATEST_RELEASE_BRANCH=$(git branch -r | grep -E '^[[:space:]]*origin/release/[0-9]+\.[0-9]+\.[0-9]+$' | sed 's|origin/release/||' | sort -V | tail -n1)
+          echo "Latest release branch found: ${LATEST_RELEASE_BRANCH}"
+
+          if [ -z "${LATEST_RELEASE_BRANCH}" ]; then
+            echo "No existing release branch found."
+          else
+            echo "Latest release branch is release/${LATEST_RELEASE_BRANCH}. Creating release/${VER} from it."
+            git checkout -b "release/${VER}" "origin/release/${LATEST_RELEASE_BRANCH}"
+          fi
+          git push origin "release/${VER}"          
 
       - name: Get current date
         id: get_date
