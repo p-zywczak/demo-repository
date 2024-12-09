@@ -74,6 +74,8 @@ jobs:
 
       - name: Create Release Branch
         if: env.CREATE_EMPTY_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LATEST_RELEASE_SHA=$(gh api repos/p-zywczak/demo-repository-2/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
           gh api repos/p-zywczak/demo-repository-2/git/refs -X POST \
