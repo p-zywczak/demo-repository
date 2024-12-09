@@ -20,17 +20,26 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Fetch Tags from Other Repository
-        id: fetch_tags
+      - name: Fetch Latest Release Branch from Repository
+        id: fetch_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REPO_OWNER="p-zywczak"  # Zastąp nazwą organizacji lub użytkownika
           REPO_NAME="demo-repository-2"      # Zastąp nazwą repozytorium
+          BRANCHES=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/branches --paginate --jq '.[].name')
+          RELEASE_BRANCHES=$(echo "$BRANCHES" | grep -E '^release/[0-9]+\.[0-9]+\.[0-9]+$')
+          
+          if [ -z "$RELEASE_BRANCHES" ]; then
+            echo "No release branches found in second repository."
+            echo "LATEST_RELEASE_BRANCH_OTHER_REPO=" >> $GITHUB_ENV
+          else
+            # Wyciągnij wersje, posortuj i wybierz najnowszą
+            LATEST_RELEASE_BRANCH_OTHER_REPO=$(echo "$RELEASE_BRANCHES" | sed 's|release/||' | sort -V | tail -n1)
+            echo "LATEST_RELEASE_BRANCH_OTHER_REPO=${LATEST_RELEASE_BRANCH_SECOND_REPO}" >> $GITHUB_ENV
+          fi
 
-          LATEST_TAG_OTHER_REPO=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/tags --jq '.[0].name | sub("^v"; "")')
-
-          echo "LATEST_TAG_OTHER_REPO=$LATEST_TAG_OTHER_REPO" >> $GITHUB_ENV          
+          echo "LATEST_RELEASE_BRANCH_OTHER_REPO=${LATEST_RELEASE_BRANCH_SECOND_REPO}" >> $GITHUB_ENV      
 
       - name: Extract Version from Commit Message
         id: extract_version
@@ -42,21 +51,20 @@ jobs:
           fi
           echo "VER=$VERSION" >> $GITHUB_ENV
 
-      - name: Compare and set tag version
+      - name: Compare versions
         id: compare_versions
         run: |
           echo "Extracted version: $VER"
-          echo "Latest tag in other repo: $LATEST_TAG_OTHER_REPO"
+          echo "Latest version in other repo: $LATEST_RELEASE_BRANCH_OTHER_REPO"
           
-          SMALLER_VERSION=$(printf '%s\n%s' "${LATEST_TAG_OTHER_REPO}" "${VER}" | sort -V | head -n1)
+          GREATER_VERSION=$(printf '%s\n%s' "$LATEST_RELEASE_BRANCH_OTHER_REPO" "$VER" | sort -V | tail -n1)
 
-          if [ "${SMALLER_VERSION}" = "${VER}" ]; then
-            echo "Using version from other repo: ${LATEST_TAG_OTHER_REPO}"
-            echo "VER=${LATEST_TAG_OTHER_REPO}" >> $GITHUB_ENV
-            echo "FROM_OTHER_REPO=true" >> $GITHUB_ENV
+          if [ "$GREATER_VERSION" = "$VER" ]; then
+            echo "VER ($VER) is greater than LATEST_RELEASE_BRANCH_OTHER_REPO ($LATEST_RELEASE_BRANCH_OTHER_REPO)"
+            echo "CREATE_EMPTY_RELEASE=true" >> $GITHUB_ENV
           else
-            echo "Using version from commit message: ${VER}"
-            echo "FROM_OTHER_REPO=false" >> $GITHUB_ENV
+            echo "VER ($VER) is not greater than LATEST_RELEASE_BRANCH_OTHER_REPO ($LATEST_RELEASE_BRANCH_OTHER_repo)"
+            echo "CREATE_EMPTY_RELEASE=false" >> $GITHUB_ENV
           fi
           
       - name: Create Tag on Main
@@ -65,21 +73,13 @@ jobs:
           git push origin "v${VER}"
 
       - name: Create Release Branch
-        if: env.FROM_OTHER_REPO == 'true'
+        if: env.CREATE_EMPTY_RELEASE == 'true'
         run: |
-          echo "Creating release branch for version ${VER} based on the latest release branch."
-          git fetch --all
-          LATEST_RELEASE_BRANCH=$(git branch -r | grep -E '^[[:space:]]*origin/release/[0-9]+\.[0-9]+\.[0-9]+$' | sed -E 's|^[[:space:]]*origin/release/||' | sort -V | tail -n1)
-          echo "Latest release branch found: ${LATEST_RELEASE_BRANCH}"
-
-          if [ -z "${LATEST_RELEASE_BRANCH}" ]; then
-            echo "No existing release branch found."
-          else
-            echo "Latest release branch is release/${LATEST_RELEASE_BRANCH}. Creating release/${VER} from it."
-            git checkout -b "release/${VER}" "origin/release/${LATEST_RELEASE_BRANCH}"
-          fi
-          git push origin "release/${VER}"          
-
+          LATEST_RELEASE_SHA=$(gh api repos/p-zywczak/demo-repository-2/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
+          gh api repos/p-zywczak/demo-repository-2/git/refs -X POST \
+            -F ref="refs/heads/release/${VER}" \
+            -F sha="${LATEST_RELEASE_SHA}"
+            
       - name: Get current date
         id: get_date
         run: |
