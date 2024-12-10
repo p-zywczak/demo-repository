@@ -142,7 +142,7 @@ jobs:
             curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE/transitions" \
               -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
               -H "Content-Type: application/json" \
-              -d '{"transition": {"id": "3"}}'
+              -d '{"transition": {"id": "${{ vars.JIRA_ID_AWAITING_TO_RELEASE }}"}}'
           done
         env:
           ISSUE_KEYS: ${{ env.ISSUE_KEYS }}
