@@ -185,7 +185,7 @@ jobs:
               -d '{
                     "update": {
                       "fixVersions": [
-                        {"add": {"name": "${{ env.RELEASE_VERSION }}"}}
+                        {"add": {"name": "[${{ vars.ENVIRONMENT }}] ${{ env.RELEASE_VERSION }}"}}
                       ]
                     }
                   }'
