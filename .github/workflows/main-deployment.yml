@@ -81,8 +81,8 @@ jobs:
             -F sha="${LATEST_RELEASE_SHA}" \
             -H "Authorization: token $GH_TOKEN"
             
-          MAIN_SHA=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/git/refs/heads/main --jq '.object.sha')
-          gh api repos/${REPO_OWNER}/${REPO_NAME}/git/refs -X POST \
+          MAIN_SHA=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs/heads/main --jq '.object.sha')
+          gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs -X POST \
             -F ref="refs/tags/v${VER}" \
             -F sha="${MAIN_SHA}" \
             -H "Authorization: token $GH_TOKEN"
