@@ -106,6 +106,41 @@ jobs:
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+          
+      - name: Fetch all releases from JIRA
+        id: fetch_releases
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/project/${{ secrets.JIRA_PROJECT_ID }}/versions'
+          method: 'GET'
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}
+
+      - name: Extract release ID
+        id: extract_release_id
+        run: |
+          RELEASE_NAME="[BACKEND] v${{ env.VER }}"
+          echo "Searching for release: $RELEASE_NAME"
+          RELEASE_ID=$(echo '${{ steps.fetch_releases.outputs.response }}' | jq -r --arg NAME "$RELEASE_NAME" '.[] | select(.name == $NAME) | .id')
+          
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Release $RELEASE_NAME not found in JIRA!"
+            exit 1
+          fi
+          echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
+
+      - name: Mark Release as Released in JIRA
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/version/${{ env.RELEASE_ID }}'
+          method: 'PUT'
+          contentType: 'application/json'
+          data: |
+            {
+              "released": true
+            }
+          username: ${{ secrets.JIRA_USER }}
+          password: ${{ secrets.JIRA_TOKEN }}          
 
       - name: Hotfix merge to develop
         if: contains(github.event.head_commit.message, 'hotfix/')
