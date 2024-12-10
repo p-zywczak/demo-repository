@@ -117,13 +117,13 @@ jobs:
       name: Create release on JIRA
       needs: create-pull-request
       runs-on: ubuntu-latest   
-      if: startsWith(github.ref, 'refs/heads/release/')
+      if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
       steps:
       - name: Fetch JIRA Tasks
         id: fetch
         uses: fjogeleit/http-request-action@v1
         with:
-          url: '${{ secrets.JIRA_URL }}/rest/api/3/search?jql=status="AWAITING TO RELEASE" AND labels="${{ vars.ENVIRONMENT }}"'
+          url: '${{ secrets.JIRA_URL }}/rest/api/3/search?jql=status="AWAITING TO RELEASE" AND labels="${{ vars.ENVIRONMENT }}" AND project="${{ secrets.JIRA_PROJECT_ID }}"'
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
