@@ -73,10 +73,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}
         run: |
-          LATEST_RELEASE_SHA=$(gh api repos/${REPO_OWNER}/${REPO_NAME}/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
+          LATEST_RELEASE_SHA=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
           echo "$VER"
           echo $LATEST_RELEASE_SHA
-          gh api repos/${REPO_OWNER}/${REPO_NAME}/git/refs -X POST \
+          gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs -X POST \
             -F ref="refs/heads/release/${VER}" \
             -F sha="${LATEST_RELEASE_SHA}" \
             -H "Authorization: token $GH_TOKEN"
