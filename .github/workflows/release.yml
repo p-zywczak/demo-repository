@@ -94,6 +94,7 @@ jobs:
       - name: CONSOLE LOG
         run: |
           echo "Branch or Tag Name: ${{ github.ref_name }}"
+          echo "Base branch (github.base_ref): ${{ github.base_ref }}"
 
   create-pull-request:
     name: Create Pull Request to Main
