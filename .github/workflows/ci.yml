@@ -23,6 +23,9 @@ jobs:
         github.event.pull_request.base.ref == 'main' &&
         startsWith(github.event.pull_request.head.ref, 'hotfix/'))
       ||
+      (github.event_name == 'pull_request' &&
+        startsWith(github.event.pull_request.base.ref, 'release/'))
+      ||
       (github.event_name == 'push' &&
         github.ref == 'refs/heads/develop')
       ||
