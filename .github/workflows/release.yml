@@ -13,9 +13,9 @@ jobs:
   rollback_release:
     name: Rollback release
     if: > 
-      github.event_name == 'pull_request' && 
+      (github.event_name == 'pull_request' && 
       github.event.action == 'closed' && 
-      github.event.pull_request.merged == false
+      startsWith(github.event.pull_request.base.ref, 'release/'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
