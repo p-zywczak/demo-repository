@@ -79,6 +79,14 @@ jobs:
             -F ref="refs/heads/release/${VER}" \
             -F sha="${LATEST_RELEASE_SHA}" \
             -H "Authorization: token $GH_TOKEN"
+
+          MAIN_SHA=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs/heads/main --jq '.object.sha')
+            echo "Main branch SHA: $MAIN_SHA"
+            echo "Creating tag 'v${VER}' on main branch"
+            gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs -X POST \
+              -F ref="refs/tags/v${VER}" \
+              -F sha="${MAIN_SHA}" \
+              -H "Authorization: token $GH_TOKEN"      
                   
       - name: Get current date
         id: get_date
