@@ -12,7 +12,10 @@ permissions: write-all
 jobs:
   rollback_release:
     name: Rollback release
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == false
+    if: > 
+      (github.event_name == 'pull_request' && 
+      github.event.action == 'closed' && 
+      startsWith(github.event.pull_request.base.ref, 'main'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -91,6 +94,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: CONSOLE LOG
+        run: |
+          echo "Branch or Tag Name: ${{ github.ref_name }}"
+          echo "Base branch (github.base_ref): ${{ github.base_ref }}"
 
   create-pull-request:
     name: Create Pull Request to Main
