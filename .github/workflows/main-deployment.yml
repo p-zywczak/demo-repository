@@ -19,22 +19,20 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Fetch Latest Release Branch from Repository
-        id: fetch_release
+      - name: Check If Release Branch Exists in Other Repo
+        id: check_branch_exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCHES=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/branches --paginate --jq '.[].name')
-          RELEASE_BRANCHES=$(echo "$BRANCHES" | grep -E '^release/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$')
+          RELEASE_BRANCH_EXISTS=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/branches --paginate --jq '.[].name' | grep -E "^release/${VER}$" || true)
           
-          if [ -z "$RELEASE_BRANCHES" ]; then
-            echo "No release branches found in second repository."
-            echo "LATEST_RELEASE_BRANCH_OTHER_REPO=" >> $GITHUB_ENV
+          if [ -n "$RELEASE_BRANCH_EXISTS" ]; then
+            echo "Release branch 'release/${VER}' already exists in the other repository."
+            echo "CREATE_EMPTY_RELEASE=false" >> $GITHUB_ENV
           else
-            # Wyciągnij wersje, posortuj i wybierz najnowszą
-            LATEST_RELEASE_BRANCH_OTHER_REPO=$(echo "$RELEASE_BRANCHES" | sed 's|release/||' | sort -V | tail -n1)
-            echo "LATEST_RELEASE_BRANCH_OTHER_REPO=${LATEST_RELEASE_BRANCH_OTHER_REPO}" >> $GITHUB_ENV
-          fi  
+            echo "Release branch 'release/${VER}' does not exist in the other repository."
+            echo "CREATE_EMPTY_RELEASE=true" >> $GITHUB_ENV
+          fi
 
       - name: Extract Version from Commit Message
         id: extract_version
@@ -46,21 +44,24 @@ jobs:
           fi
           echo "VER=$VERSION" >> $GITHUB_ENV
           
-
-      - name: Compare versions
-        id: compare_versions
+      - name: Fetch Latest Release Branch SHA
+        if: env.CREATE_EMPTY_RELEASE == 'true'
+        id: fetch_latest_release_sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Extracted version: $VER"
-          echo "Latest version in other repo: $LATEST_RELEASE_BRANCH_OTHER_REPO"
-          
-          GREATER_VERSION=$(printf '%s\n%s' "$LATEST_RELEASE_BRANCH_OTHER_REPO" "$VER" | sort -V | tail -n1)
-
-          if [ "$GREATER_VERSION" = "$VER" ]; then
-            echo "VER ($VER) is greater than LATEST_RELEASE_BRANCH_OTHER_REPO ($LATEST_RELEASE_BRANCH_OTHER_REPO)"
-            echo "CREATE_EMPTY_RELEASE=true" >> $GITHUB_ENV
+          BRANCHES=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/branches --paginate --jq '.[].name')
+          RELEASE_BRANCHES=$(echo "$BRANCHES" | grep -E '^release/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$')
+      
+          if [ -z "$RELEASE_BRANCHES" ]; then
+            echo "No release branches found in the other repository."
+            exit 1
           else
-            echo "VER ($VER) is not greater than LATEST_RELEASE_BRANCH_OTHER_REPO ($LATEST_RELEASE_BRANCH_OTHER_repo)"
-            echo "CREATE_EMPTY_RELEASE=false" >> $GITHUB_ENV
+            LATEST_RELEASE_BRANCH=$(echo "$RELEASE_BRANCHES" | sed 's|release/||' | sort -V | tail -n1)
+            echo "Latest release branch: release/${LATEST_RELEASE_BRANCH}"
+      
+            LATEST_RELEASE_SHA=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs/heads/release/${LATEST_RELEASE_BRANCH} --jq '.object.sha')
+            echo "LATEST_RELEASE_SHA=${LATEST_RELEASE_SHA}" >> $GITHUB_ENV
           fi
           
       - name: Create Tag on Main
@@ -68,29 +69,21 @@ jobs:
           git tag "v${VER}"
           git push origin "v${VER}"
 
-      - name: Create Empty Release Branch
+      - name: Create Empty Release Branch in Other Repo
         if: env.CREATE_EMPTY_RELEASE == 'true'
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}
         run: |
-          LATEST_RELEASE_SHA=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs/heads/release/${LATEST_RELEASE_BRANCH_OTHER_REPO} --jq '.object.sha')
-          echo "$VER"
-          echo $LATEST_RELEASE_SHA
+          echo "Creating new release branch 'release/${VER}' based on SHA: ${LATEST_RELEASE_SHA}"
           gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs -X POST \
             -F ref="refs/heads/release/${VER}" \
             -F sha="${LATEST_RELEASE_SHA}" \
             -H "Authorization: token $GH_TOKEN"
-            
-          MAIN_SHA=$(gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs/heads/main --jq '.object.sha')
-          gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs -X POST \
-            -F ref="refs/tags/v${VER}" \
-            -F sha="${MAIN_SHA}" \
-            -H "Authorization: token $GH_TOKEN"
-            
-      - name: Get current date
-        id: get_date
-        run: |
-          TZ="Europe/Warsaw" date "+RELEASE_DATE=%Y-%m-%d %H:%M:%S %Z" >> $GITHUB_ENV
+                  
+            - name: Get current date
+              id: get_date
+              run: |
+                TZ="Europe/Warsaw" date "+RELEASE_DATE=%Y-%m-%d %H:%M:%S %Z" >> $GITHUB_ENV
 
       - name: Generate Changelog
         id: generate_changelog
