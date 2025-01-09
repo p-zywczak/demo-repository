@@ -80,10 +80,10 @@ jobs:
             -F sha="${LATEST_RELEASE_SHA}" \
             -H "Authorization: token $GH_TOKEN"
                   
-            - name: Get current date
-              id: get_date
-              run: |
-                TZ="Europe/Warsaw" date "+RELEASE_DATE=%Y-%m-%d %H:%M:%S %Z" >> $GITHUB_ENV
+      - name: Get current date
+        id: get_date
+        run: |
+          TZ="Europe/Warsaw" date "+RELEASE_DATE=%Y-%m-%d %H:%M:%S %Z" >> $GITHUB_ENV
 
       - name: Generate Changelog
         id: generate_changelog
