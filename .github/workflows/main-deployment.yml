@@ -97,6 +97,7 @@ jobs:
           COMMIT_MESSAGE="Update .version to v${VER}"
           COMMITTER_NAME="GitHub Action"
           COMMITTER_EMAIL="actions@github.com"
+          FILE_SHA=$(gh api /repos/$REPO/contents/$FILE_PATH --jq '.sha' || echo "")
 
           # Zakodowanie zawartości pliku w base64 (GitHub API wymaga base64)
           ENCODED_CONTENT=$(echo -n "$FILE_CONTENT" | base64 -w 0)
@@ -110,7 +111,8 @@ jobs:
             -f content="$ENCODED_CONTENT" \
             -f branch="$BRANCH" \
             -f committer[name]="$COMMITTER_NAME" \
-            -f committer[email]="$COMMITTER_EMAIL"
+            -f committer[email]="$COMMITTER_EMAIL" \
+            ${FILE_SHA:+-f sha="$FILE_SHA"}
 
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}       
