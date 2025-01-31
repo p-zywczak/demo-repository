@@ -109,6 +109,9 @@ jobs:
           git fetch --all
           git checkout $BASE_BRANCH
           git pull origin $BASE_BRANCH
+          git add .version
+          git commit -m "Oznaczenie wersji aplikacji ${{ env.RELEASE_VERSION }}"
+          git push origin $BASE_BRANCH
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           
