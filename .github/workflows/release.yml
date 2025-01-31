@@ -93,6 +93,9 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/release/')
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
       - name: Configure Git
         run: |
           git config user.name "GitHub Action"
@@ -104,9 +107,6 @@ jobs:
           echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
         env:
           GITHUB_REF: ${{ github.ref }}
-          
-      - name: Checkout repository
-        uses: actions/checkout@v3
         
       - name: Create version file in repo
         run: |
