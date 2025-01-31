@@ -118,6 +118,7 @@ jobs:
           git commit -m "Oznaczenie wersji aplikacji ${{ env.RELEASE_VERSION }}"
           git push origin $BASE_BRANCH
         env:
+          BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           
   deploy-to-pre:
