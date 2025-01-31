@@ -86,7 +86,34 @@ jobs:
             gh api repos/${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}/git/refs -X POST \
               -F ref="refs/tags/v${VER}" \
               -F sha="${MAIN_SHA}" \
-              -H "Authorization: token $GH_TOKEN"      
+              -H "Authorization: token $GH_TOKEN"   
+              
+      - name: Update .version file
+        run: |
+          REPO="${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}"
+          BRANCH="main"
+          FILE_PATH=".version"
+          FILE_CONTENT="v${VER}"
+          COMMIT_MESSAGE="Update .version to v${VER}"
+          COMMITTER_NAME="GitHub Action"
+          COMMITTER_EMAIL="actions@github.com"
+
+          # Zakodowanie zawartości pliku w base64 (GitHub API wymaga base64)
+          ENCODED_CONTENT=$(echo -n "$FILE_CONTENT" | base64 -w 0)
+
+          # Wykonaj zapytanie do API, aby dodać/zaktualizować plik
+          gh api --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/$REPO/contents/$FILE_PATH \
+            -f message="$COMMIT_MESSAGE" \
+            -f content="$ENCODED_CONTENT" \
+            -f branch="$BRANCH" \
+            -f committer[name]="$COMMITTER_NAME" \
+            -f committer[email]="$COMMITTER_EMAIL"
+
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_PAT }}       
                   
       - name: Get current date
         id: get_date
