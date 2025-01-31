@@ -110,7 +110,7 @@ jobs:
         
       - name: Create version file in repo
         run: |
-          echo "${{ env.RELEASE_VERSION }}" >> .version
+          echo "${{ env.RELEASE_VERSION }}" > .version
           git fetch --all
           git checkout $BASE_BRANCH
           git pull origin $BASE_BRANCH
