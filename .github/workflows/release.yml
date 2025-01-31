@@ -87,6 +87,39 @@ jobs:
           git add .pr_status
           git commit -m "Oznaczenie PR zamkniętego: #${{ github.event.pull_request.number }}"
           git push origin $BASE_BRANCH
+  
+  create-version-file:
+    name: Create version file
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "actions@github.com"
+          
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        
+      - name: Create version file in repo
+        run: |
+          echo "${{ env.RELEASE_VERSION }}" > .version
+          git fetch --all
+          git checkout $BASE_BRANCH
+          git pull origin $BASE_BRANCH
+          git add .version
+          git commit -m "Oznaczenie wersji aplikacji ${{ env.RELEASE_VERSION }}"
+          git push origin $BASE_BRANCH
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           
   deploy-to-pre:
     name: Deploy to Pre Server
@@ -135,13 +168,15 @@ jobs:
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
+
+      - name: Write JIRA response to file
+        run: echo "${{ steps.fetch.outputs.response }}" > jira_response.json     
           
       - name: Extract Issue Keys
         id: extract
         run: |
-          echo "ISSUE_KEYS=$(echo '${{ steps.fetch.outputs.response }}' | jq -r '.issues[].key' | paste -sd "," -)" >> $GITHUB_ENV
-        env:
-          JIRA_RESPONSE: ${{ steps.fetch.outputs.response }}
+          ISSUE_KEYS=$(jq -r '.issues[].key' jira_response.json | paste -sd "," -)
+          echo "ISSUE_KEYS=$ISSUE_KEYS" >> $GITHUB_ENV
 
       - name: Update Task Status for Each Issue
         run: |
@@ -157,13 +192,6 @@ jobs:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER: ${{ secrets.JIRA_USER }}
           JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
-
-      - name: Extract Release Version
-        id: extract_version
-        run: |
-          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
-        env:
-          GITHUB_REF: ${{ github.ref }}
 
       - name: Create Release in JIRA
         id: create_release
