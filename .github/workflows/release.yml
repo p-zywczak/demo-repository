@@ -198,7 +198,7 @@ jobs:
 
       - name: Assign Issues to Release
         run: |
-          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+          for ISSUE in $(cat issue_keys.txt | tr "," "\n"); do
             echo "Assigning issue $ISSUE to release $RELEASE_VERSION..."
             curl -X PUT "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE" \
               -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
