@@ -173,7 +173,7 @@ jobs:
       - name: Extract Issue Keys
         id: extract
         run: |
-          ISSUE_KEYS=$(jq -r '.issues[].key' jira_response.json | paste -sd "," -)
+          jq -r '.issues[].key' jira_response.json | paste -sd "," - > issue_keys.txt
         env:
           ISSUE_KEYS: $(cat issue_keys.txt)
 
