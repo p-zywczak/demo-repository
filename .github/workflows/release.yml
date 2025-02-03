@@ -168,15 +168,14 @@ jobs:
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
-
-      - name: Write JIRA response to file
-        run: echo "${{ steps.fetch.outputs.response }}" > jira_response.json     
+          outputFile: jira_response.json
           
       - name: Extract Issue Keys
         id: extract
         run: |
           ISSUE_KEYS=$(jq -r '.issues[].key' jira_response.json | paste -sd "," -)
-          echo "ISSUE_KEYS=$ISSUE_KEYS" >> $GITHUB_ENV
+        env:
+          ISSUE_KEYS: $(cat issue_keys.txt)
 
       - name: Update Task Status for Each Issue
         run: |
