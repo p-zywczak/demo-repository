@@ -146,7 +146,7 @@ jobs:
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
-          outputFile: jira_response.json
+          responseFile: jira_response.json
           
       - name: Extract Issue Keys
         id: extract
