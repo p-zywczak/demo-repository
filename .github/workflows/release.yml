@@ -159,8 +159,7 @@ jobs:
         id: extract
         run: |
           jq -r '.issues[].key' jira_response.json | paste -sd "," - > issue_keys.txt
-        env:
-          ISSUE_KEYS: $(cat issue_keys.txt)
+          echo "ISSUE_KEYS=$ISSUE_KEYS" >> $GITHUB_ENV
 
       - name: Debug JIRA Response
         run: echo $ISSUE_KEYS
