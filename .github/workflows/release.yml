@@ -148,8 +148,7 @@ jobs:
           password: ${{ secrets.JIRA_TOKEN }}
           responseFile: jira_response.json
       
-      - name: Debug JIRA Response
-        run: cat jira_response.json
+
 
       - name: Extract Issue Keys
         id: extract
@@ -157,6 +156,9 @@ jobs:
           jq -r '.issues[].key' jira_response.json | paste -sd "," - > issue_keys.txt
         env:
           ISSUE_KEYS: $(cat issue_keys.txt)
+
+      - name: Debug JIRA Response
+        run: cat issue_keys.txt
 
       - name: Update Task Status for Each Issue
         run: |
