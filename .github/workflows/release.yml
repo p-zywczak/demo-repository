@@ -135,7 +135,6 @@ jobs:
           
   jira-release:
       name: Create release on JIRA
-      needs: create-pull-request
       runs-on: ubuntu-latest   
       if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
       steps:
