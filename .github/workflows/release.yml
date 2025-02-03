@@ -159,16 +159,13 @@ jobs:
         id: extract
         run: |
           jq -r '.issues[].key' jira_response.json | paste -sd "," - > issue_keys.txt
-          echo "ISSUE_KEYS=$ISSUE_KEYS" >> $GITHUB_ENV
 
       - name: Debug JIRA Response
-        run: echo $ISSUE_KEYS
-        env:
-          ISSUE_KEYS: ${{ env.ISSUE_KEYS }}
+        run: cat issue_keys.txt
 
       - name: Update Task Status for Each Issue
         run: |
-          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+          for ISSUE in $(cat issue_keys.txt | tr "," "\n"); do
             echo "Updating issue $ISSUE..."
             curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE/transitions" \
               -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
