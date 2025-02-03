@@ -138,6 +138,13 @@ jobs:
       runs-on: ubuntu-latest   
       if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
       steps:
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          
       - name: Fetch JIRA Tasks
         id: fetch
         uses: fjogeleit/http-request-action@v1
@@ -148,8 +155,6 @@ jobs:
           password: ${{ secrets.JIRA_TOKEN }}
           responseFile: jira_response.json
       
-
-
       - name: Extract Issue Keys
         id: extract
         run: |
@@ -158,7 +163,9 @@ jobs:
           ISSUE_KEYS: $(cat issue_keys.txt)
 
       - name: Debug JIRA Response
-        run: cat issue_keys.txt
+        run: echo $ISSUE_KEYS
+        env:
+          ISSUE_KEYS: ${{ env.ISSUE_KEYS }}
 
       - name: Update Task Status for Each Issue
         run: |
