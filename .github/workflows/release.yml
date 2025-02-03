@@ -147,7 +147,10 @@ jobs:
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
           responseFile: jira_response.json
-          
+      
+      - name: Debug JIRA Response
+        run: cat jira_response.json
+
       - name: Extract Issue Keys
         id: extract
         run: |
