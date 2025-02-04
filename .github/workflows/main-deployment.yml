@@ -92,7 +92,7 @@ jobs:
         if: env.CREATE_EMPTY_RELEASE == 'true'
         run: |
           REPO="${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}"
-          BRANCH="main"
+          BRANCH="release/${VER}"
           FILE_PATH=".version"
           FILE_CONTENT="v${VER}"
           COMMIT_MESSAGE="Update .version to v${VER}"
