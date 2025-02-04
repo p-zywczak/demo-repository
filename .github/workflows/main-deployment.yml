@@ -112,8 +112,7 @@ jobs:
             -f content="$ENCODED_CONTENT" \
             -f branch="$BRANCH" \
             -f committer[name]="$COMMITTER_NAME" \
-            -f committer[email]="$COMMITTER_EMAIL" \
-            ${FILE_SHA:+-f sha="$FILE_SHA"}
+            -f committer[email]="$COMMITTER_EMAIL"
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}      
 
