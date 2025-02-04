@@ -128,7 +128,7 @@ jobs:
             -f title="Merge release/${VER} into main" \
             -f body="Automatyczne PR dla wersji ${VER} do gałęzi develop." \
             -f head="release/${VER}" \
-            -f base="develop"
+            -f base="main"
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}       
                   
