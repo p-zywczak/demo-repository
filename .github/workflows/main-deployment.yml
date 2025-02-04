@@ -89,6 +89,7 @@ jobs:
               -H "Authorization: token $GH_TOKEN"   
               
       - name: Update .version file
+        if: env.CREATE_EMPTY_RELEASE == 'true'
         run: |
           REPO="${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}"
           BRANCH="main"
@@ -113,7 +114,21 @@ jobs:
             -f committer[name]="$COMMITTER_NAME" \
             -f committer[email]="$COMMITTER_EMAIL" \
             ${FILE_SHA:+-f sha="$FILE_SHA"}
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_PAT }}      
 
+      - name: Create PR in other repo
+        if: env.CREATE_EMPTY_RELEASE == 'true'
+        run: |
+          REPO="${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}"
+          gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/$REPO/pulls \
+            -f title="Merge release/${VER} into main" \
+            -f body="Automatyczne PR dla wersji ${VER} do gałęzi develop." \
+            -f head="release/${VER}" \
+            -f base="develop"
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}       
                   
