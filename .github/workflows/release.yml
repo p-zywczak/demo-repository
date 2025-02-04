@@ -132,34 +132,19 @@ jobs:
         run: |
           echo "Branch or Tag Name: ${{ github.ref_name }}"
           echo "Base branch (github.base_ref): ${{ github.base_ref }}"
-
-  create-pull-request:
-    name: Create Pull Request to Main
-    needs: deploy-to-pre
-    runs-on: ubuntu-latest   
-    if: startsWith(github.ref, 'refs/heads/release/')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          branch: ${{ github.ref }}
-          title: "Merge ${{ github.ref_name }} into main"
-          labels: |
-            RELEASE
-
+          
   jira-release:
       name: Create release on JIRA
-      needs: create-pull-request
       runs-on: ubuntu-latest   
       if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
       steps:
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          
       - name: Fetch JIRA Tasks
         id: fetch
         uses: fjogeleit/http-request-action@v1
@@ -168,19 +153,19 @@ jobs:
           method: 'GET'
           username: ${{ secrets.JIRA_USER }}
           password: ${{ secrets.JIRA_TOKEN }}
-
-      - name: Write JIRA response to file
-        run: echo "${{ steps.fetch.outputs.response }}" > jira_response.json     
-          
+          responseFile: jira_response.json
+      
       - name: Extract Issue Keys
         id: extract
         run: |
-          ISSUE_KEYS=$(jq -r '.issues[].key' jira_response.json | paste -sd "," -)
-          echo "ISSUE_KEYS=$ISSUE_KEYS" >> $GITHUB_ENV
+          jq -r '.issues[].key' jira_response.json | paste -sd "," - > issue_keys.txt
+
+      - name: Debug JIRA Response
+        run: cat issue_keys.txt
 
       - name: Update Task Status for Each Issue
         run: |
-          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+          for ISSUE in $(cat issue_keys.txt | tr "," "\n"); do
             echo "Updating issue $ISSUE..."
             curl -X POST "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE/transitions" \
               -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
@@ -213,7 +198,7 @@ jobs:
 
       - name: Assign Issues to Release
         run: |
-          for ISSUE in $(echo $ISSUE_KEYS | tr "," "\n"); do
+          for ISSUE in $(cat issue_keys.txt | tr "," "\n"); do
             echo "Assigning issue $ISSUE to release $RELEASE_VERSION..."
             curl -X PUT "${{ secrets.JIRA_URL }}/rest/api/3/issue/$ISSUE" \
               -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" \
