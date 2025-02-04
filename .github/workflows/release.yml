@@ -132,6 +132,37 @@ jobs:
         run: |
           echo "Branch or Tag Name: ${{ github.ref_name }}"
           echo "Base branch (github.base_ref): ${{ github.base_ref }}"
+
+  create-pull-request:
+    name: Create Pull Request to Main
+    needs: deploy-to-pre
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: ${{ github.ref }}
+          title: "Merge ${{ github.ref_name }} into main"
+          labels: |
+            RELEASE
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: develop
+          branch: ${{ github.ref }}
+          title: "Merge ${{ github.ref_name }} into develop"
+          labels: |
+            RELEASE      
           
   jira-release:
       name: Create release on JIRA
