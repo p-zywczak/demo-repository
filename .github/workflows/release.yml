@@ -115,8 +115,11 @@ jobs:
         
       - name: Version update
         run: |
-          FORMATTED_VERSION=$(echo "${{ env.RELEASE_VERSION }}" | sed 's/\(.*\)\./\1-/')
-          npm version $FORMATTED_VERSION --no-git-tag-version
+          # FORMATTED_VERSION=$(echo "${{ env.RELEASE_VERSION }}" | sed 's/\(.*\)\./\1-/')
+          # npm version $FORMATTED_VERSION --no-git-tag-version
+          git checkout ${{ github.ref_name }}
+          CLEAN_VERSION=$(echo "${{ env.RELEASE_VERSION }}" | sed 's/^v//')
+          jq --arg ver "$CLEAN_VERSION" '.version = $ver' package.json > temp.json && mv temp.json package.json
         env:
           BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}

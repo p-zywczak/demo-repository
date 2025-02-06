@@ -1,6 +1,6 @@
 {
   "name": "zgloszenia",
-  "version": "21.0.0-2",
+  "version": "21.0.0.6",
   "private": true,
   "scripts": {
     "dev": "npm run lint --fix && vite",
