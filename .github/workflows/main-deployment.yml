@@ -93,17 +93,31 @@ jobs:
         run: |
           REPO="${{ vars.REPO_OWNER }}/${{ vars.REPO_NAME }}"
           BRANCH="release/${VER}"
-          FILE_PATH=".version"
-          FILE_CONTENT="v${VER}"
-          COMMIT_MESSAGE="Update .version to v${VER}"
+          FILE_PATH="package.json"
+          COMMIT_MESSAGE="chore: update package.json version to v${VER}"
           COMMITTER_NAME="GitHub Action"
           COMMITTER_EMAIL="actions@github.com"
-          FILE_SHA=$(gh api /repos/$REPO/contents/$FILE_PATH?ref=$BRANCH --jq '.sha' || echo "")
-
-          # Zakodowanie zawartości pliku w base64 (GitHub API wymaga base64)
-          ENCODED_CONTENT=$(echo -n "$FILE_CONTENT" | base64 -w 0)
-
-          # Wykonaj zapytanie do API, aby dodać/zaktualizować plik
+      
+          # Pobierz obecny plik package.json
+          echo "Fetching current package.json..."
+          RESPONSE=$(gh api /repos/$REPO/contents/$FILE_PATH?ref=$BRANCH)
+          
+          # Pobierz SHA pliku (potrzebne do aktualizacji)
+          FILE_SHA=$(echo "$RESPONSE" | jq -r '.sha')
+      
+          # Dekoduj obecny package.json
+          echo "Decoding current package.json..."
+          CURRENT_CONTENT=$(echo "$RESPONSE" | jq -r '.content' | base64 -d)
+      
+          # Zmień wersję w package.json (używamy jq)
+          echo "Updating package.json version..."
+          UPDATED_CONTENT=$(echo "$CURRENT_CONTENT" | jq --arg VER "$VER" '.version=$VER')
+      
+          # Zakoduj nowy package.json do base64 (GitHub API wymaga base64)
+          ENCODED_CONTENT=$(echo -n "$UPDATED_CONTENT" | base64 -w 0)
+      
+          # Wykonaj zapytanie do API, aby dodać/zaktualizować plik package.json
+          echo "Pushing updated package.json to GitHub..."
           gh api --method PUT \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -113,7 +127,7 @@ jobs:
             -f branch="$BRANCH" \
             -f committer[name]="$COMMITTER_NAME" \
             -f committer[email]="$COMMITTER_EMAIL" \
-            ${FILE_SHA:+-f sha="$FILE_SHA"}
+            -f sha="$FILE_SHA"
         env:
           GH_TOKEN: ${{ secrets.TOKEN_PAT }}      
 
