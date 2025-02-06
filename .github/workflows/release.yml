@@ -112,6 +112,11 @@ jobs:
           echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
         env:
           GITHUB_REF: ${{ github.ref }}
+
+      - name: update by extension
+        uses: Reedyuk/NPM-Version@1.2.2
+        with:
+          version: 1.20.39
         
       - name: Version update
         run: |
