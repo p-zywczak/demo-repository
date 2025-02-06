@@ -95,7 +95,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+      
+      - name: Set up Node.js
+        if: github.event_name == 'pull_request'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'    
+          
       - name: Configure Git
         run: |
           git config user.name "GitHub Action"
@@ -108,15 +114,10 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref }}
         
-      - name: Create version file in repo
+      - name: Version update
         run: |
-          echo "${{ env.RELEASE_VERSION }}" > .version
-          git fetch --all
-          git checkout $BASE_BRANCH
-          git pull origin $BASE_BRANCH
-          git add .version
-          git commit -m "Oznaczenie wersji aplikacji ${{ env.RELEASE_VERSION }}"
-          git push origin $BASE_BRANCH
+          FORMATTED_VERSION=$(echo "${{ env.RELEASE_VERSION }}" | sed 's/\(.*\)\./\1-/')
+          npm version $FORMATTED_VERSION
         env:
           BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
