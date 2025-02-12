@@ -157,6 +157,7 @@ jobs:
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
+        continue-on-error: true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
@@ -164,10 +165,10 @@ jobs:
           title: "Merge ${{ github.ref_name }} into main"
           labels: |
             RELEASE
-          skip-if-empty: true
       
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
+        continue-on-error: true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: develop
@@ -175,7 +176,6 @@ jobs:
           title: "Merge ${{ github.ref_name }} into develop"
           labels: |
             RELEASE      
-          skip-if-empty: true
           
   jira-release:
       name: Create release on JIRA
