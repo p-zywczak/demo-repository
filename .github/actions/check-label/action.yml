@@ -1,0 +1,9 @@
+name: 'My Custom JavaScript Action'
+description: 'Opis tego, co robi akcja'
+inputs:
+  example_input:
+    description: 'Przykładowy input'
+    required: true
+runs:
+  using: 'node12'
+  main: 'index.js'
