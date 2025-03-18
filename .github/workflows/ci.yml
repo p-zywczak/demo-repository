@@ -56,7 +56,7 @@ jobs:
             core.setOutput('user_login', pr.user.login);
             
       - name: Uruchom moją akcję
-        uses: ./.github/actions/my-action
+        uses: ./.github/actions/check-label
         with:
           example_input: 'moja wartość'
 
