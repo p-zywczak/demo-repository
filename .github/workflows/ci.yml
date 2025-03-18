@@ -54,6 +54,11 @@ jobs:
             core.setOutput('title', pr.title);
             core.setOutput('html_url', pr.html_url);
             core.setOutput('user_login', pr.user.login);
+            
+      - name: Uruchom moją akcję
+        uses: ./.github/actions/my-action
+        with:
+          example_input: 'moja wartość'
 
       - name: Assign PR creator
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
