@@ -26,6 +26,7 @@ export class LabelChecker
         required.forEach(label => {
             if (!labelsNames.includes(label)) {
                 core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
+                throw new Error(`Brakuje wymaganej etykiety: ${label}`);
             }
         });
     }
