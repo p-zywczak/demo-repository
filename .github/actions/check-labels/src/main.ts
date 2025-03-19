@@ -5,8 +5,6 @@ import { LabelChecker } from './LabelChecker';
 async function run(): Promise<void> {
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels')) as string[];
-    core.info(`🔍 Sprawdzam wymagane etykiety: ${requiredLabels.join(', ')}`);
-    core.info(`🔍 Sprawdzam przynajmniej jedną z etykiet: ${anyOfLabels.join(', ')}`);
     const githubApi= github.getOctokit(core.getInput('token'));
     const context = {
         owner: github.context.repo.owner,
@@ -19,7 +17,8 @@ async function run(): Promise<void> {
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
     const labels = await labelChecker.fetchLabelsOnPR();
     core.info(`🔍 Sprawdzam przynajmniej labelki na PR: ${labels}`);
-    const checkRequired = labelChecker.verifyRequiredLabels(requiredLabels);
+    await labelChecker.verifyRequiredLabels(requiredLabels);
+    core.info('test');
 }
 
 run();

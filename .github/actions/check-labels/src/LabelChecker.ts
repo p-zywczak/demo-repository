@@ -29,4 +29,5 @@ export class LabelChecker
             }
         });
     }
+    async
 }
