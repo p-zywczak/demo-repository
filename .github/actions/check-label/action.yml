@@ -1,9 +1,13 @@
-name: 'My Custom JavaScript Action'
-description: 'Opis tego, co robi akcja'
+name: 'Hello World Action'
+description: 'Pierwsza własna akcja napisana w TypeScript'
 inputs:
-  example_input:
-    description: 'Przykładowy input'
+  name:
+    description: 'Imię osoby'
     required: true
+    default: 'Użytkowniku'
+outputs:
+  greeting:
+    description: 'Wiadomość powitalna'
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: 'node16'
+  main: 'dist/index.js'
