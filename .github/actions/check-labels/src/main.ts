@@ -18,6 +18,7 @@ async function run(): Promise<void> {
     const labels = await labelChecker.fetchLabelsOnPR();
     core.info(`🔍 Sprawdzam przynajmniej labelki na PR: ${labels}`);
     await labelChecker.verifyRequiredLabels(requiredLabels);
+
     core.info('test');
 }
 
