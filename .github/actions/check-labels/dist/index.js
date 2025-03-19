@@ -29971,12 +29971,16 @@ class LabelChecker {
     }
     async verifyRequiredLabels(required) {
         const labelsNames = await this.fetchLabelsOnPR();
+        const errors = [];
         required.forEach(label => {
             if (!labelsNames.includes(label)) {
-                core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
-                throw new Error(`Brakuje wymaganej etykiety: ${label}`);
+                errors.push(`PR nie ma wymaganej etykiety ${label}.`);
             }
         });
+        if (errors.length > 0) {
+            core.setFailed(errors.join('\n'));
+            throw new Error(errors.join('\n'));
+        }
     }
 }
 exports.LabelChecker = LabelChecker;
