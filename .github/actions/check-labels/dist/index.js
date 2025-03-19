@@ -25684,14 +25684,10 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 async function run() {
-    try {
-        const name = core.getInput('name');
-        core.info(`Witaj, ${name}! To twoja pierwsza własna akcja w TS!`);
-        core.setOutput('greeting', `Cześć ${name}, akcja zakończona sukcesem!`);
-    }
-    catch (error) {
-        core.setFailed(error.message);
-    }
+    const requiredLabels = JSON.parse(core.getInput('required_labels'));
+    const anyOfLabels = JSON.parse(core.getInput('any_of_labels'));
+    core.info(`🔍 Sprawdzam wymagane etykiety: ${requiredLabels.join(', ')}`);
+    core.info(`🔍 Sprawdzam przynajmniej jedną z etykiet: ${anyOfLabels.join(', ')}`);
 }
 run();
 
