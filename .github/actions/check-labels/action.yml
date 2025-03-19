@@ -1,0 +1,14 @@
+name: 'Manager labels'
+description: 'Manager labels - check label or remove label when commit'
+inputs:
+  required_labels:
+    description: 'List of labels that must be present on Pull Request'
+    required: false
+    default: '[]'
+  any_of_labels:
+    description: 'List of labels, at least one of which must be present on Pull Request'
+    required: false
+    default: '[]'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

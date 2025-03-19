@@ -55,13 +55,12 @@ jobs:
             core.setOutput('html_url', pr.html_url);
             core.setOutput('user_login', pr.user.login);
             
-      - name: Użyj mojej lokalnej akcji
-        id: hello
-        uses: ./.github/actions/check-label
+      - name: Check Labels
+        uses: ./.github/actions/check-labels
         with:
-          name: 'Jan'
-      - name: Wyświetl rezultat
-        run: echo "${{ steps.hello.outputs.greeting }}"
+          required_labels: '["CR1", "APPROVAL"]'
+          any_of_labels: '["DOCUMENTATION", "NOT DOCUMENTATION"]'
+
 
       - name: Assign PR creator
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
