@@ -23,10 +23,11 @@ export class LabelChecker
     async verifyRequiredLabels(required: string[]):Promise<void>
     {
         const labelsNames = await this.fetchLabelsOnPR();
-        required.forEach(label => {
-            if (!labelsNames.includes(label)) {
-                return core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
-            }
-        });
+        const missingLabels = required.filter(label => !labelsNames.includes(label));
+
+        if (missingLabels.length > 0) {
+            const errorMessage = `PR nie ma wymaganych etykiet: ${missingLabels.join(', ')}.`;
+            throw new Error(errorMessage);
+        }
     }
 }
