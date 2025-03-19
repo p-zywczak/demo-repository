@@ -30029,8 +30029,6 @@ async function run() {
     var _a, _b, _c;
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels'));
-    core.info(`🔍 Sprawdzam wymagane etykiety: ${requiredLabels.join(', ')}`);
-    core.info(`🔍 Sprawdzam przynajmniej jedną z etykiet: ${anyOfLabels.join(', ')}`);
     const githubApi = github.getOctokit(core.getInput('token'));
     const context = {
         owner: github.context.repo.owner,
@@ -30043,7 +30041,8 @@ async function run() {
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context);
     const labels = await labelChecker.fetchLabelsOnPR();
     core.info(`🔍 Sprawdzam przynajmniej labelki na PR: ${labels}`);
-    const checkRequired = labelChecker.verifyRequiredLabels(requiredLabels);
+    await labelChecker.verifyRequiredLabels(requiredLabels);
+    core.info('test');
 }
 run();
 
