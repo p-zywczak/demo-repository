@@ -1,6 +1,9 @@
 name: 'Manager labels'
 description: 'Manager labels - check label or remove label when commit'
 inputs:
+  token:
+    description: 'Github token (GITHUB_TOKEN)'
+    required: true
   required_labels:
     description: 'List of labels that must be present on Pull Request'
     required: false
