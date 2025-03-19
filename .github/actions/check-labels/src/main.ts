@@ -17,7 +17,13 @@ async function run(): Promise<void> {
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
     const labels = await labelChecker.fetchLabelsOnPR();
     core.info(`🔍 Sprawdzam przynajmniej labelki na PR: ${labels}`);
-    await labelChecker.verifyRequiredLabels(requiredLabels);
+    try {
+        await labelChecker.verifyRequiredLabels(requiredLabels);
+    } catch (error) {
+        const errorMessage = (error as Error).message;
+        core.setFailed(errorMessage);
+    }
+
 
     core.info('test');
 }
