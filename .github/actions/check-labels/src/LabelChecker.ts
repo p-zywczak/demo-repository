@@ -18,6 +18,15 @@ export class LabelChecker
             repo,
             issue_number: prNumber,
         });
-        return data.map(label => ({ name: label.name }));
+        return data.map(label => label.name);
+    }
+    async verifyRequiredLabels(required: string[]):Promise<void>
+    {
+        const labelsNames = await this.fetchLabelsOnPR();
+        required.forEach(label => {
+            if (!labelsNames.includes(label)) {
+                core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
+            }
+        });
     }
 }

@@ -19,6 +19,7 @@ async function run(): Promise<void> {
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
     const labels = await labelChecker.fetchLabelsOnPR();
     core.info(`🔍 Sprawdzam przynajmniej labelki na PR: ${labels}`);
+    const checkRequired = labelChecker.verifyRequiredLabels(requiredLabels);
 }
 
 run();
