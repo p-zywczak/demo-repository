@@ -5,8 +5,6 @@ import { LabelChecker } from './LabelChecker';
 async function run(): Promise<void> {
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels')) as string[][];
-    const flattenedAnyOfLabels = anyOfLabels.flat();
-    const allLabelsToCheck = requiredLabels.concat(flattenedAnyOfLabels);
     const githubApi= github.getOctokit(core.getInput('token'));
     const context = {
         owner: github.context.repo.owner,
@@ -18,7 +16,7 @@ async function run(): Promise<void> {
     }
 
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
-    await labelChecker.checkSelfLabelAssignment(allLabelsToCheck);
+    await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
     await labelChecker.verifyAnyOfLabels(anyOfLabels);
 
