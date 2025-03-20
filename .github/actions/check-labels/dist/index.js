@@ -30019,8 +30019,36 @@ class LabelChecker {
         const labelsNames = await this.fetchLabelsOnPR();
         return labelsNames.some(label => labels.includes(label));
     }
+    async hasCRLabel() {
+        const labelsNames = await this.fetchLabelsOnPR();
+        return labelsNames.some(label => /CR/.test(label));
+    }
 }
 exports.LabelChecker = LabelChecker;
+
+
+/***/ }),
+
+/***/ 159:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LabelRemover = void 0;
+const LabelChecker_1 = __nccwpck_require__(1134);
+class LabelRemover extends LabelChecker_1.LabelChecker {
+    async removeLabel(label) {
+        const { owner, repo, prNumber } = this.context;
+        await this.githubApi.rest.issues.removeLabel({
+            owner,
+            repo,
+            issue_number: prNumber,
+            name: label,
+        });
+    }
+}
+exports.LabelRemover = LabelRemover;
 
 
 /***/ }),
@@ -30067,6 +30095,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const LabelChecker_1 = __nccwpck_require__(1134);
+const LabelRemover_1 = __nccwpck_require__(159);
 async function run() {
     var _a, _b, _c;
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
@@ -30082,6 +30111,14 @@ async function run() {
         branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
     };
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context);
+    const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
+    const prHasCRLabel = await labelChecker.hasCRLabel();
+    if (prHasCRLabel) {
+        const prLabels = await labelChecker.fetchLabelsOnPR();
+        if (prLabels.includes('APPROVAL')) {
+            await labelRemover.removeLabel('APPROVAL');
+        }
+    }
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
