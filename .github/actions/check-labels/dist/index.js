@@ -29973,7 +29973,7 @@ class LabelChecker {
         const labelsNames = await this.fetchLabelsOnPR();
         required.forEach(label => {
             if (!labelsNames.includes(label)) {
-                core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
+                core.setFailed(`PR does not have the required label: ${label}.`);
             }
         });
     }
@@ -29982,8 +29982,8 @@ class LabelChecker {
         anyOfLabelsGroups.forEach((group) => {
             const hasLabel = labelsNames.some(label => group.includes(label));
             if (!hasLabel) {
-                const groupStr = `[${group.join(', ')}]`;
-                core.setFailed((`Brakuje labelek z grupy: ${groupStr}.`));
+                const groupStr = `[${group.join(' OR ')}]`;
+                core.setFailed((`Missing labels from the group: ${groupStr}.`));
             }
         });
     }
