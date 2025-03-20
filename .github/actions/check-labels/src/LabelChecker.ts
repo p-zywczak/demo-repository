@@ -68,4 +68,8 @@ export class LabelChecker
             }
         });
     }
+    async hasBypassSkipLabel(labels: string[]){
+        const labelsNames = await this.fetchLabelsOnPR();
+        return labelsNames.some(label => labels.includes(label));
+    }
 }

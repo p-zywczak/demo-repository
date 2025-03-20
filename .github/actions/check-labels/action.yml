@@ -12,6 +12,10 @@ inputs:
     description: 'List of labels, at least one of which must be present on Pull Request'
     required: false
     default: '[]'
+  skip_labels_check:
+    description: 'If the specified label appears on the PR, the process of checking the labels will be skipped.'
+    required: false
+    default: '[]'
 runs:
   using: 'node20'
   main: 'dist/index.js'

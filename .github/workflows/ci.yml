@@ -61,6 +61,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           required_labels: '["CR1", "APPROVAL"]'
           any_of_labels: '[["DOCUMENTATION", "NOT DOCUMENTATION"], ["DOCUMENTATION1", "NOT DOCUMENTATION1"]]'
+          skip_labels_check: '["DO MERGE"]'
 
 
       - name: Assign PR creator
