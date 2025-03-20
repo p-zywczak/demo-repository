@@ -5,8 +5,8 @@ import { LabeledEvent } from './types';
 
 export class LabelChecker
 {
-    private githubApi: InstanceType<typeof GitHub>;
-    private context: GithubContext;
+    protected githubApi: InstanceType<typeof GitHub>;
+    protected context: GithubContext;
     public constructor(githubApi: InstanceType<typeof GitHub>, context: GithubContext) {
         this.githubApi = githubApi;
         this.context = context;
@@ -71,5 +71,9 @@ export class LabelChecker
     async hasBypassSkipLabel(labels: string[]){
         const labelsNames = await this.fetchLabelsOnPR();
         return labelsNames.some(label => labels.includes(label));
+    }
+    async hasCRLabel():Promise<boolean> {
+        const labelsNames = await this.fetchLabelsOnPR();
+        return labelsNames.some(label => /CR/.test(label));
     }
 }

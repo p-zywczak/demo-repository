@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { LabelChecker } from './LabelChecker';
+import { LabelRemover } from './LabelRemover';
 
 async function run(): Promise<void> {
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
@@ -17,6 +18,14 @@ async function run(): Promise<void> {
     }
 
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
+    const labelRemover:LabelRemover = new LabelRemover(githubApi, context);
+    const prHasCRLabel:boolean = await labelChecker.hasCRLabel();
+    if(prHasCRLabel) {
+        const prLabels = await labelChecker.fetchLabelsOnPR();
+        if(prLabels.includes('APPROVAL')) {
+            await labelRemover.removeLabel('APPROVAL')
+        }
+    }
     if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
