@@ -29982,8 +29982,27 @@ class LabelChecker {
         anyOfLabelsGroups.forEach((group) => {
             const hasLabel = labelsNames.some(label => group.includes(label));
             if (!hasLabel) {
-                const groupStr = `[${group.join(' OR ')}]`;
-                core.setFailed((`Missing labels from the group: ${groupStr}.`));
+                core.setFailed((`Missing labels from the group: ${group.join(' OR ')}.`));
+            }
+        });
+    }
+    async checkSelfLabelAssignment(labels) {
+        const { owner, repo, prNumber, prAuthor } = this.context;
+        const eventsResponse = await this.githubApi.rest.issues.listEventsForTimeline({
+            owner,
+            repo,
+            issue_number: prNumber,
+        });
+        const events = eventsResponse.data;
+        labels.forEach((label) => {
+            const addedByAuthor = events.find((event) => {
+                var _a, _b;
+                return event.event === 'labeled' &&
+                    ((_a = event.label) === null || _a === void 0 ? void 0 : _a.name) === label &&
+                    ((_b = event.actor) === null || _b === void 0 ? void 0 : _b.login) === prAuthor;
+            });
+            if (addedByAuthor) {
+                core.setFailed(`PR author cannot assign the label ${label} to themselves.`);
             }
         });
     }
@@ -30039,6 +30058,8 @@ async function run() {
     var _a, _b, _c;
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels'));
+    const flattenedAnyOfLabels = anyOfLabels.flat();
+    const allLabelsToCheck = requiredLabels.concat(flattenedAnyOfLabels);
     const githubApi = github.getOctokit(core.getInput('token'));
     const context = {
         owner: github.context.repo.owner,
@@ -30049,6 +30070,7 @@ async function run() {
         branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
     };
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context);
+    await labelChecker.checkSelfLabelAssignment(allLabelsToCheck);
     await labelChecker.verifyRequiredLabels(requiredLabels);
     await labelChecker.verifyAnyOfLabels(anyOfLabels);
     core.info('test');

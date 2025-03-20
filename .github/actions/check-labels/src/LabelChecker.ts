@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import { GitHub } from '@actions/github/lib/utils';
 import { GithubContext } from './types';
+import { LabeledEvent } from './types';
 
 export class LabelChecker
 {
@@ -35,8 +36,27 @@ export class LabelChecker
         anyOfLabelsGroups.forEach((group: string[]) => {
             const hasLabel = labelsNames.some(label => group.includes(label))
             if(!hasLabel) {
-                const groupStr: string = `[${group.join(' OR ')}]`;
-                core.setFailed((`Missing labels from the group: ${groupStr}.`))
+                core.setFailed((`Missing labels from the group: ${group.join(' OR ')}.`))
+            }
+        });
+    }
+    async checkSelfLabelAssignment(labels: string[])
+    {
+        const {owner, repo, prNumber, prAuthor} = this.context
+        const eventsResponse = await this.githubApi.rest.issues.listEventsForTimeline({
+            owner,
+            repo,
+            issue_number: prNumber,
+        });
+        const events = eventsResponse.data as LabeledEvent[];
+        labels.forEach((label: string) => {
+            const addedByAuthor = events.find((event: LabeledEvent) =>
+                event.event === 'labeled' &&
+                event.label?.name === label &&
+                event.actor?.login === prAuthor
+            );
+            if (addedByAuthor) {
+                core.setFailed(`PR author cannot assign the label ${label} to themselves.`);
             }
         });
     }
