@@ -49,14 +49,22 @@ export class LabelChecker
             issue_number: prNumber,
         });
         const events = eventsResponse.data as LabeledEvent[];
+        events.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         labels.forEach((label: string) => {
-            const addedByAuthor = events.find((event: LabeledEvent) =>
+            const labelAddEvent = events.find((event: LabeledEvent) =>
                 event.event === 'labeled' &&
                 event.label?.name === label &&
                 event.actor?.login === prAuthor
             );
-            if (addedByAuthor) {
-                core.setFailed(`PR author cannot assign the label ${label} to themselves.`);
+            const labelRemoveEvent = events.find((event: LabeledEvent) =>
+                event.event === 'unlabeled' &&
+                event.label?.name === label &&
+                event.actor?.login === prAuthor
+            );
+            if (labelAddEvent) {
+                if (!labelRemoveEvent || new Date(labelAddEvent.created_at) > new Date(labelRemoveEvent.created_at)) {
+                    core.setFailed(`PR author cannot assign the label ${label} to themselves.`);
+                }
             }
         });
     }

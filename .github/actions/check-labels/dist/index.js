@@ -29994,15 +29994,24 @@ class LabelChecker {
             issue_number: prNumber,
         });
         const events = eventsResponse.data;
+        events.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         labels.forEach((label) => {
-            const addedByAuthor = events.find((event) => {
+            const labelAddEvent = events.find((event) => {
                 var _a, _b;
                 return event.event === 'labeled' &&
                     ((_a = event.label) === null || _a === void 0 ? void 0 : _a.name) === label &&
                     ((_b = event.actor) === null || _b === void 0 ? void 0 : _b.login) === prAuthor;
             });
-            if (addedByAuthor) {
-                core.setFailed(`PR author cannot assign the label ${label} to themselves.`);
+            const labelRemoveEvent = events.find((event) => {
+                var _a, _b;
+                return event.event === 'unlabeled' &&
+                    ((_a = event.label) === null || _a === void 0 ? void 0 : _a.name) === label &&
+                    ((_b = event.actor) === null || _b === void 0 ? void 0 : _b.login) === prAuthor;
+            });
+            if (labelAddEvent) {
+                if (!labelRemoveEvent || new Date(labelAddEvent.created_at) > new Date(labelRemoveEvent.created_at)) {
+                    core.setFailed(`PR author cannot assign the label ${label} to themselves.`);
+                }
             }
         });
     }
