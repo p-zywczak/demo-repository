@@ -30015,6 +30015,10 @@ class LabelChecker {
             }
         });
     }
+    async hasBypassSkipLabel(labels) {
+        const labelsNames = await this.fetchLabelsOnPR();
+        return labelsNames.some(label => labels.includes(label));
+    }
 }
 exports.LabelChecker = LabelChecker;
 
@@ -30067,6 +30071,7 @@ async function run() {
     var _a, _b, _c;
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels'));
+    const skipLabelsCheck = JSON.parse(core.getInput('skip_labels_check'));
     const githubApi = github.getOctokit(core.getInput('token'));
     const context = {
         owner: github.context.repo.owner,
@@ -30077,6 +30082,9 @@ async function run() {
         branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
     };
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context);
+    if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
+        core.info('The PR has a label that allows skipping other checks.');
+    }
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
     await labelChecker.verifyAnyOfLabels(anyOfLabels);
