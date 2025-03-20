@@ -4,7 +4,7 @@ import { LabelChecker } from './LabelChecker';
 
 async function run(): Promise<void> {
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
-    const anyOfLabels = JSON.parse(core.getInput('any_of_labels')) as string[];
+    const anyOfLabels = JSON.parse(core.getInput('any_of_labels')) as string[][];
     const githubApi= github.getOctokit(core.getInput('token'));
     const context = {
         owner: github.context.repo.owner,
@@ -15,14 +15,8 @@ async function run(): Promise<void> {
         branchName: github.context.payload.pull_request?.head.ref!,
     }
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
-    const labels = await labelChecker.fetchLabelsOnPR();
-    core.info(`🔍 Sprawdzam przynajmniej labelki na PR: ${labels}`);
-    try {
-        await labelChecker.verifyRequiredLabels(requiredLabels);
-    } catch (error) {
-        const errorMessage = (error as Error).message;
-        core.setFailed(errorMessage);
-    }
+    await labelChecker.verifyRequiredLabels(requiredLabels);
+    await labelChecker.verifyAnyOfLabels(anyOfLabels);
 
 
     core.info('test');
