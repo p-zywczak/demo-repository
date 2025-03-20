@@ -25,18 +25,18 @@ export class LabelChecker
         const labelsNames = await this.fetchLabelsOnPR();
         required.forEach(label => {
             if (!labelsNames.includes(label)) {
-                core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
+                core.setFailed(`PR does not have the required label: ${label}.`);
             }
         });
     }
     async verifyAnyOfLabels(anyOfLabelsGroups: string[][]):Promise<void>
     {
         const labelsNames = await this.fetchLabelsOnPR();
-        anyOfLabelsGroups.forEach((group) => {
+        anyOfLabelsGroups.forEach((group: string[]) => {
             const hasLabel = labelsNames.some(label => group.includes(label))
             if(!hasLabel) {
-                const groupStr = `[${group.join(', ')}]`;
-                core.setFailed((`Brakuje labelek z grupy: ${groupStr}.`))
+                const groupStr: string = `[${group.join(' OR ')}]`;
+                core.setFailed((`Missing labels from the group: ${groupStr}.`))
             }
         });
     }
