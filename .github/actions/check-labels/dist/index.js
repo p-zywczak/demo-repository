@@ -30084,6 +30084,7 @@ async function run() {
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context);
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
+        return;
     }
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
