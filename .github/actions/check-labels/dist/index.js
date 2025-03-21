@@ -30057,13 +30057,17 @@ class LabelRemover {
     }
     async removeLabel(labels) {
         const { owner, repo, prNumber } = this.context;
-        for (const label of labels) {
-            await this.githubApi.rest.issues.removeLabel({
-                owner,
-                repo,
-                issue_number: prNumber,
-                name: label,
-            });
+        try {
+            for (const label of labels) {
+                await this.githubApi.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: prNumber,
+                    name: label,
+                });
+            }
+        }
+        catch (error) {
         }
     }
 }
@@ -30132,12 +30136,10 @@ async function run() {
         eventAction: github.context.payload.action || '',
     };
     const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
-    /*
     if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
-        await labelRemover.removeLabel(requiredLabels)
+        await labelRemover.removeLabel(requiredLabels);
         return;
     }
-    */
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');

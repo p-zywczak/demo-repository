@@ -15,13 +15,17 @@ export class LabelRemover
     async removeLabel(labels: string[]): Promise<void>
     {
         const { owner, repo, prNumber } = this.context;
-        for(const label of labels) {
-            await this.githubApi.rest.issues.removeLabel({
-                owner,
-                repo,
-                issue_number: prNumber,
-                name: label,
-            });
+        try {
+            for(const label of labels) {
+                await this.githubApi.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: prNumber,
+                    name: label,
+                });
+            }
+        } catch (error) {
+
         }
     }
 }
