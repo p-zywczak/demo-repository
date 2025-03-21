@@ -30023,7 +30023,7 @@ class LabelChecker {
     async checkAndRemoveApprovalIfCRPresent() {
         const labelsNames = await this.fetchLabelsOnPR();
         const hasCRLabel = labelsNames.some((label) => /CR/.test(label));
-        if (hasCRLabel && labelsNames.includes('APPROVAL')) {
+        if (!hasCRLabel && labelsNames.includes('APPROVAL')) {
             await this.labelRemover.removeLabel('APPROVAL');
         }
     }
