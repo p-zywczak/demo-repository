@@ -23,7 +23,12 @@ async function run(): Promise<void> {
         await labelRemover.removeLabel(requiredLabels)
     }
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context, new LabelRemover(githubApi, context));
-    await labelChecker.hasBypassSkipLabel(skipLabelsCheck)
+
+    if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
+        core.info('The PR has a label that allows skipping other checks.');
+        return;
+    }
+
 
     await labelChecker.checkAndRemoveApprovalIfCRPresent();
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
