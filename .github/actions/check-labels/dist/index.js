@@ -30034,7 +30034,7 @@ class LabelChecker {
         const labelsNames = await this.fetchLabelsOnPR();
         const hasCRLabel = labelsNames.some((label) => /CR/.test(label));
         if (!hasCRLabel && labelsNames.includes('APPROVAL')) {
-            await this.labelRemover.removeLabel('APPROVAL');
+            await this.labelRemover.removeLabel(['APPROVAL']);
         }
     }
 }
@@ -30055,14 +30055,16 @@ class LabelRemover {
         this.githubApi = githubApi;
         this.context = context;
     }
-    async removeLabel(label) {
+    async removeLabel(labels) {
         const { owner, repo, prNumber } = this.context;
-        await this.githubApi.rest.issues.removeLabel({
-            owner,
-            repo,
-            issue_number: prNumber,
-            name: label,
-        });
+        for (const label of labels) {
+            await this.githubApi.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: prNumber,
+                name: label,
+            });
+        }
     }
 }
 exports.LabelRemover = LabelRemover;
@@ -30126,7 +30128,14 @@ async function run() {
         actor: github.context.actor,
         prAuthor: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.user.login,
         branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
+        eventName: github.context.eventName,
+        eventAction: github.context.payload.action || '',
     };
+    const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
+    if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
+        await labelRemover.removeLabel(requiredLabels);
+        return;
+    }
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
