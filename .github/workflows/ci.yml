@@ -35,25 +35,6 @@ jobs:
         
     steps:
       - uses: actions/checkout@v2
-      - uses: ahmadnassri/action-workflow-queue@v1
-      - name: Get data Pull Request
-        if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
-        uses: actions/github-script@v6
-        id: get_pr
-        with:
-          script: |
-            const prUrl = context.payload.issue.pull_request.url;
-            const prNumber = context.payload.issue.number;
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-            console.log('PR DATA', pr);
-            
-            core.setOutput('title', pr.title);
-            core.setOutput('html_url', pr.html_url);
-            core.setOutput('user_login', pr.user.login);
             
       - name: Check Labels
         uses: ./.github/actions/check-labels
