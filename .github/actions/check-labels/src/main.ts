@@ -21,9 +21,9 @@ async function run(): Promise<void> {
     const labelRemover = new LabelRemover(githubApi, context);
     if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
         await labelRemover.removeLabel(requiredLabels)
-        return;
     }
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context, new LabelRemover(githubApi, context));
+    core.info(`skipLabelsCheck: ${JSON.stringify(skipLabelsCheck)}`);
     if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
