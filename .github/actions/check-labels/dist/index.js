@@ -30028,19 +30028,7 @@ class LabelChecker {
     }
     async hasBypassSkipLabel(labels) {
         const labelsNames = await this.fetchLabelsOnPR();
-        core.info(`labels: ${labels}`);
-        // Sprawdzamy, czy jest jakikolwiek wspólny label
-        const hasBypassLabel = labels.some((label) => labelsNames.includes(label));
-        if (hasBypassLabel) {
-            // Jeśli przynajmniej jedna etykieta z `labels` jest na PR
-            core.info('Bypass label found. Returning true.');
-            return true;
-        }
-        else {
-            // Jeśli żaden label z `labels` nie został znaleziony na PR
-            core.info('No bypass label. Returning false.');
-            return false;
-        }
+        return labels.some((label) => labelsNames.includes(label));
     }
     async checkAndRemoveApprovalIfCRPresent() {
         const labelsNames = await this.fetchLabelsOnPR();
@@ -30152,13 +30140,9 @@ async function run() {
         await labelRemover.removeLabel(requiredLabels);
     }
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
-    const test = await labelChecker.hasBypassSkipLabel(skipLabelsCheck);
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
-    }
-    else {
-        core.info('test');
     }
     await labelChecker.checkAndRemoveApprovalIfCRPresent();
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
