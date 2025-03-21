@@ -36,8 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
             
-      - name: Check Labels
-        uses: ./.github/actions/check-labels
+      - name: Manger Labels
+        uses: ./.github/actions/manager-labels
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           required_labels: '["CR1", "APPROVAL"]'
