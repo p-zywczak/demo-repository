@@ -29979,6 +29979,11 @@ class LabelChecker {
         });
     }
     async verifyAnyOfLabels(anyOfLabelsGroups) {
+        const isHotfixBranch = this.context.branchName.startsWith('hotfix');
+        if (isHotfixBranch) {
+            core.info('Hotfix branch detected – skipping label verification.');
+            return;
+        }
         const labelsNames = await this.fetchLabelsOnPR();
         anyOfLabelsGroups.forEach((group) => {
             const hasLabel = labelsNames.some((label) => group.includes(label));
@@ -30118,11 +30123,11 @@ async function run() {
         branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
     };
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
-    await labelChecker.checkAndRemoveApprovalIfCRPresent();
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
     }
+    await labelChecker.checkAndRemoveApprovalIfCRPresent();
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
     await labelChecker.verifyAnyOfLabels(anyOfLabels);

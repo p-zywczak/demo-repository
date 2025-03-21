@@ -39,6 +39,11 @@ export class LabelChecker
     }
     async verifyAnyOfLabels(anyOfLabelsGroups: string[][]):Promise<void>
     {
+        const isHotfixBranch = this.context.branchName.startsWith('hotfix');
+        if (isHotfixBranch) {
+            core.info('Hotfix branch detected – skipping label verification.');
+            return;
+        }
         const labelsNames = await this.fetchLabelsOnPR();
         anyOfLabelsGroups.forEach((group: string[]) => {
             const hasLabel = labelsNames.some((label: string) => group.includes(label))
