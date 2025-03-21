@@ -17,15 +17,8 @@ async function run(): Promise<void> {
         branchName: github.context.payload.pull_request?.head.ref!,
     }
 
-    const labelChecker:LabelChecker = new LabelChecker(githubApi, context);
-    const labelRemover:LabelRemover = new LabelRemover(githubApi, context);
-    const prHasCRLabel:boolean = await labelChecker.hasCRLabel();
-    if(prHasCRLabel) {
-        const prLabels = await labelChecker.fetchLabelsOnPR();
-        if(prLabels.includes('APPROVAL')) {
-            await labelRemover.removeLabel('APPROVAL')
-        }
-    }
+    const labelChecker:LabelChecker = new LabelChecker(githubApi, context, new LabelRemover(githubApi, context));
+    await labelChecker.checkAndRemoveApprovalIfCRPresent();
     if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;

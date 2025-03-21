@@ -29956,9 +29956,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LabelChecker = void 0;
 const core = __importStar(__nccwpck_require__(7484));
 class LabelChecker {
-    constructor(githubApi, context) {
+    constructor(githubApi, context, labelRemover) {
         this.githubApi = githubApi;
         this.context = context;
+        this.labelRemover = labelRemover;
     }
     async fetchLabelsOnPR() {
         const { owner, repo, prNumber } = this.context;
@@ -29980,7 +29981,7 @@ class LabelChecker {
     async verifyAnyOfLabels(anyOfLabelsGroups) {
         const labelsNames = await this.fetchLabelsOnPR();
         anyOfLabelsGroups.forEach((group) => {
-            const hasLabel = labelsNames.some(label => group.includes(label));
+            const hasLabel = labelsNames.some((label) => group.includes(label));
             if (!hasLabel) {
                 core.setFailed((`Missing labels from the group: ${group.join(' OR ')}.`));
             }
@@ -30017,11 +30018,14 @@ class LabelChecker {
     }
     async hasBypassSkipLabel(labels) {
         const labelsNames = await this.fetchLabelsOnPR();
-        return labelsNames.some(label => labels.includes(label));
+        return labelsNames.some((label) => labels.includes(label));
     }
-    async hasCRLabel() {
+    async checkAndRemoveApprovalIfCRPresent() {
         const labelsNames = await this.fetchLabelsOnPR();
-        return labelsNames.some(label => /CR/.test(label));
+        const hasCRLabel = labelsNames.some((label) => /CR/.test(label));
+        if (hasCRLabel && labelsNames.includes('APPROVAL')) {
+            await this.labelRemover.removeLabel('APPROVAL');
+        }
     }
 }
 exports.LabelChecker = LabelChecker;
@@ -30030,14 +30034,17 @@ exports.LabelChecker = LabelChecker;
 /***/ }),
 
 /***/ 159:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LabelRemover = void 0;
-const LabelChecker_1 = __nccwpck_require__(1134);
-class LabelRemover extends LabelChecker_1.LabelChecker {
+class LabelRemover {
+    constructor(githubApi, context) {
+        this.githubApi = githubApi;
+        this.context = context;
+    }
     async removeLabel(label) {
         const { owner, repo, prNumber } = this.context;
         await this.githubApi.rest.issues.removeLabel({
@@ -30110,15 +30117,8 @@ async function run() {
         prAuthor: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.user.login,
         branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
     };
-    const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context);
-    const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
-    const prHasCRLabel = await labelChecker.hasCRLabel();
-    if (prHasCRLabel) {
-        const prLabels = await labelChecker.fetchLabelsOnPR();
-        if (prLabels.includes('APPROVAL')) {
-            await labelRemover.removeLabel('APPROVAL');
-        }
-    }
+    const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
+    await labelChecker.checkAndRemoveApprovalIfCRPresent();
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
