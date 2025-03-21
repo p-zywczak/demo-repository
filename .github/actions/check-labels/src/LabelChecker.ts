@@ -2,16 +2,23 @@ import * as core from '@actions/core';
 import { GitHub } from '@actions/github/lib/utils';
 import { GithubContext } from './types';
 import { LabeledEvent } from './types';
+import {LabelRemover} from "./LabelRemover";
 
 export class LabelChecker
 {
     protected githubApi: InstanceType<typeof GitHub>;
     protected context: GithubContext;
-    public constructor(githubApi: InstanceType<typeof GitHub>, context: GithubContext) {
+    private labelRemover: LabelRemover
+    public constructor(
+        githubApi: InstanceType<typeof GitHub>,
+        context: GithubContext,
+        labelRemover: LabelRemover
+    ) {
         this.githubApi = githubApi;
         this.context = context;
+        this.labelRemover = labelRemover;
     }
-    async fetchLabelsOnPR()
+    async fetchLabelsOnPR(): Promise<any>
     {
         const {owner, repo, prNumber} = this.context
         const { data } = await this.githubApi.rest.issues.listLabelsOnIssue({
@@ -21,7 +28,7 @@ export class LabelChecker
         });
         return data.map(label => label.name);
     }
-    async verifyRequiredLabels(required: string[]):Promise<void>
+    async verifyRequiredLabels(required: string[]): Promise<void>
     {
         const labelsNames = await this.fetchLabelsOnPR();
         required.forEach(label => {
@@ -34,13 +41,13 @@ export class LabelChecker
     {
         const labelsNames = await this.fetchLabelsOnPR();
         anyOfLabelsGroups.forEach((group: string[]) => {
-            const hasLabel = labelsNames.some(label => group.includes(label))
+            const hasLabel = labelsNames.some((label: string) => group.includes(label))
             if(!hasLabel) {
                 core.setFailed((`Missing labels from the group: ${group.join(' OR ')}.`))
             }
         });
     }
-    async checkSelfLabelAssignment(labels: string[])
+    async checkSelfLabelAssignment(labels: string[]): Promise<void>
     {
         const {owner, repo, prNumber, prAuthor} = this.context
         const eventsResponse = await this.githubApi.rest.issues.listEventsForTimeline({
@@ -68,12 +75,17 @@ export class LabelChecker
             }
         });
     }
-    async hasBypassSkipLabel(labels: string[]){
+    async hasBypassSkipLabel(labels: string[]): Promise<any>
+    {
         const labelsNames = await this.fetchLabelsOnPR();
-        return labelsNames.some(label => labels.includes(label));
+        return labelsNames.some((label: string) => labels.includes(label));
     }
-    async hasCRLabel():Promise<boolean> {
+    async checkAndRemoveApprovalIfCRPresent(): Promise<void>
+    {
         const labelsNames = await this.fetchLabelsOnPR();
-        return labelsNames.some(label => /CR/.test(label));
+        const hasCRLabel = labelsNames.some((label: string) => /CR/.test(label));
+        if(hasCRLabel && labelsNames.includes('APPROVAL')) {
+            await this.labelRemover.removeLabel('APPROVAL');
+        }
     }
 }
