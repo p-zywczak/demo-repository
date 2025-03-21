@@ -30028,7 +30028,7 @@ class LabelChecker {
     }
     async hasBypassSkipLabel(labels) {
         const labelsNames = await this.fetchLabelsOnPR();
-        core.info(labelsNames);
+        core.info(`${labels}`);
         return labels.some((label) => labelsNames.includes(label));
     }
     async checkAndRemoveApprovalIfCRPresent() {
@@ -30141,10 +30141,7 @@ async function run() {
         await labelRemover.removeLabel(requiredLabels);
     }
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
-    if (!await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
-        core.info('The PR has a label that allows skipping other checks.');
-        return;
-    }
+    await labelChecker.hasBypassSkipLabel(skipLabelsCheck);
     await labelChecker.checkAndRemoveApprovalIfCRPresent();
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
