@@ -41,7 +41,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           required_labels: '["CR1", "APPROVAL"]'
-          any_of_labels: '[["DOCUMENTATION", "NOT DOCUMENTATION"], ["DOCUMENTATION1", "NOT DOCUMENTATION1"]]'
+          any_of_labels: '[["DOCUMENTATION", "NOT DOCUMENTATION"]]'
           skip_labels_check: '["DO MERGE"]'
 
 

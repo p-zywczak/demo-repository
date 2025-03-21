@@ -18,11 +18,12 @@ async function run(): Promise<void> {
         eventName: github.context.eventName,
         eventAction: github.context.payload.action || '',
     }
-    const labelRemover = new LabelRemover(githubApi, context);
+    const labelRemover: LabelRemover = new LabelRemover(githubApi, context);
     if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
         await labelRemover.removeLabel(requiredLabels)
+        core.info('Removing required labels because a new commit was pushed to the branch.')
     }
-    const labelChecker:LabelChecker = new LabelChecker(githubApi, context, new LabelRemover(githubApi, context));
+    const labelChecker: LabelChecker = new LabelChecker(githubApi, context, labelRemover);
     if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;

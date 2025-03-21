@@ -30138,8 +30138,9 @@ async function run() {
     const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
     if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
         await labelRemover.removeLabel(requiredLabels);
+        core.info('Removing required labels because a new commit was pushed to the branch.');
     }
-    const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
+    const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, labelRemover);
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
