@@ -88,7 +88,9 @@ export class LabelChecker
     async hasBypassSkipLabel(labels: string[]): Promise<any>
     {
         const labelsNames = await this.fetchLabelsOnPR();
-        return labelsNames.some((label: string) => labels.includes(label));
+        labels.forEach(label => {
+            return labelsNames.includes(label);
+        })
     }
     async checkAndRemoveApprovalIfCRPresent(): Promise<void>
     {
