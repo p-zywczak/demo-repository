@@ -30156,6 +30156,9 @@ async function run() {
         core.info('The PR has a label that allows skipping other checks.');
         return;
     }
+    else {
+        core.info('test');
+    }
     await labelChecker.checkAndRemoveApprovalIfCRPresent();
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);

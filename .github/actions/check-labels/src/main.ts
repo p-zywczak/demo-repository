@@ -27,6 +27,8 @@ async function run(): Promise<void> {
     if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
+    } else {
+        core.info('test');
     }
 
 
