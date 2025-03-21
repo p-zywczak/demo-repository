@@ -88,20 +88,7 @@ export class LabelChecker
     async hasBypassSkipLabel(labels: string[]): Promise<boolean>
     {
         const labelsNames = await this.fetchLabelsOnPR();
-        core.info(`labels: ${labels}`);
-
-        // Sprawdzamy, czy jest jakikolwiek wspólny label
-        const hasBypassLabel = labels.some((label) => labelsNames.includes(label));
-
-        if (hasBypassLabel) {
-            // Jeśli przynajmniej jedna etykieta z `labels` jest na PR
-            core.info('Bypass label found. Returning true.');
-            return true;
-        } else {
-            // Jeśli żaden label z `labels` nie został znaleziony na PR
-            core.info('No bypass label. Returning false.');
-            return false;
-        }
+        return labels.some((label) => labelsNames.includes(label));
     }
     async checkAndRemoveApprovalIfCRPresent(): Promise<void>
     {
