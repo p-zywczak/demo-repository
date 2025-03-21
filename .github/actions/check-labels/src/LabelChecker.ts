@@ -8,7 +8,8 @@ export class LabelChecker
 {
     protected githubApi: InstanceType<typeof GitHub>;
     protected context: GithubContext;
-    private labelRemover: LabelRemover
+    private labelRemover: LabelRemover;
+    private cachedLabels: string[] | null = null;
     public constructor(
         githubApi: InstanceType<typeof GitHub>,
         context: GithubContext,
@@ -20,6 +21,9 @@ export class LabelChecker
     }
     async fetchLabelsOnPR(): Promise<any>
     {
+        if(this.cachedLabels) {
+            return this.cachedLabels;
+        }
         const {owner, repo, prNumber} = this.context
         const { data } = await this.githubApi.rest.issues.listLabelsOnIssue({
             owner,

@@ -29957,11 +29957,15 @@ exports.LabelChecker = void 0;
 const core = __importStar(__nccwpck_require__(7484));
 class LabelChecker {
     constructor(githubApi, context, labelRemover) {
+        this.cachedLabels = null;
         this.githubApi = githubApi;
         this.context = context;
         this.labelRemover = labelRemover;
     }
     async fetchLabelsOnPR() {
+        if (this.cachedLabels) {
+            return this.cachedLabels;
+        }
         const { owner, repo, prNumber } = this.context;
         const { data } = await this.githubApi.rest.issues.listLabelsOnIssue({
             owner,
@@ -30131,7 +30135,6 @@ async function run() {
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
     await labelChecker.verifyAnyOfLabels(anyOfLabels);
-    core.info('test');
 }
 run();
 
