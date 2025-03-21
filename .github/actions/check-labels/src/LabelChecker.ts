@@ -89,9 +89,7 @@ export class LabelChecker
     {
         const labelsNames = await this.fetchLabelsOnPR();
         core.info(labelsNames);
-        labels.forEach(label => {
-            return labelsNames.includes(label);
-        })
+        return labels.some(label => labelsNames.includes(label));
     }
     async checkAndRemoveApprovalIfCRPresent(): Promise<void>
     {
