@@ -30141,9 +30141,6 @@ async function run() {
         await labelRemover.removeLabel(requiredLabels);
     }
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
-    core.info(`skipLabelsCheck: ${JSON.stringify(skipLabelsCheck)}`);
-    const test = await labelChecker.hasBypassSkipLabel(skipLabelsCheck);
-    core.info(`Wartość test: ${test}`);
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
         return;
