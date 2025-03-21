@@ -26,9 +26,6 @@ async function run(): Promise<void> {
     await labelChecker.checkSelfLabelAssignment(requiredLabels);
     await labelChecker.verifyRequiredLabels(requiredLabels);
     await labelChecker.verifyAnyOfLabels(anyOfLabels);
-
-
-    core.info('test');
 }
 
 run();
