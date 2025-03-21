@@ -30132,10 +30132,12 @@ async function run() {
         eventAction: github.context.payload.action || '',
     };
     const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
+    /*
     if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
-        await labelRemover.removeLabel(requiredLabels);
+        await labelRemover.removeLabel(requiredLabels)
         return;
     }
+    */
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, new LabelRemover_1.LabelRemover(githubApi, context));
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');
