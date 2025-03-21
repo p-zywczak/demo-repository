@@ -29972,7 +29972,8 @@ class LabelChecker {
             repo,
             issue_number: prNumber,
         });
-        return data.map(label => label.name);
+        this.cachedLabels = data.map(label => label.name);
+        return this.cachedLabels;
     }
     async verifyRequiredLabels(required) {
         const labelsNames = await this.fetchLabelsOnPR();
