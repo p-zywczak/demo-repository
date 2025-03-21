@@ -88,6 +88,7 @@ export class LabelChecker
     async hasBypassSkipLabel(labels: string[]): Promise<any>
     {
         const labelsNames = await this.fetchLabelsOnPR();
+        core.info(labelsNames);
         labels.forEach(label => {
             return labelsNames.includes(label);
         })
