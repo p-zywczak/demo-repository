@@ -15,8 +15,14 @@ async function run(): Promise<void> {
         actor: github.context.actor,
         prAuthor: github.context.payload.pull_request?.user.login!,
         branchName: github.context.payload.pull_request?.head.ref!,
+        eventName: github.context.eventName,
+        eventAction: github.context.payload.action || '',
     }
-
+    const labelRemover = new LabelRemover(githubApi, context);
+    if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
+        await labelRemover.removeLabel(requiredLabels)
+        return;
+    }
     const labelChecker:LabelChecker = new LabelChecker(githubApi, context, new LabelRemover(githubApi, context));
     if(await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
         core.info('The PR has a label that allows skipping other checks.');

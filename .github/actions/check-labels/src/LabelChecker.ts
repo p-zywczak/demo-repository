@@ -95,7 +95,7 @@ export class LabelChecker
         const labelsNames = await this.fetchLabelsOnPR();
         const hasCRLabel = labelsNames.some((label: string) => /CR/.test(label));
         if(!hasCRLabel && labelsNames.includes('APPROVAL')) {
-            await this.labelRemover.removeLabel('APPROVAL');
+            await this.labelRemover.removeLabel(['APPROVAL']);
         }
     }
 }

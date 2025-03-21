@@ -5,6 +5,8 @@ export interface GithubContext {
     actor: string;
     prAuthor: string;
     branchName: string;
+    eventName: string;
+    eventAction: string;
 }
 export interface LabeledEvent {
     event: string;
