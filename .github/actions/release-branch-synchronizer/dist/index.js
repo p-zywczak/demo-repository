@@ -29964,11 +29964,14 @@ class ReleaseBranchSynchronizer {
     }
     async checkReleaseBranchExists() {
         const branchNameToCheck = `release/${this.ver}`;
-        const { data: branches } = await this.githubApi.rest.repos.listBranches({
+        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
             owner: this.repoOwner,
             repo: this.repoName,
-            per_page: 100,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
         });
+        core.info(`${branches}`);
         const exists = branches.some(branch => branch.name === branchNameToCheck);
         if (exists) {
             core.info(`Release branch '${branchNameToCheck}' already exists in the repository`);
