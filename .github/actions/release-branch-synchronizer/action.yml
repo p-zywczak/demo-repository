@@ -1,0 +1,18 @@
+name: 'Release Branch Synchronizer'
+description: 'It is used to update the version in the second repository to ensure both repositories have the same version'
+inputs:
+  token:
+    description: 'Github token (GITHUB_TOKEN)'
+    required: true
+  ver:
+    description: 'Version release'
+    required: true
+  repo_owner:
+    description: 'Owner from the second repository'
+    required: true
+  repo_name:
+    description: 'Name repo from the second repository'
+    required: true
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
