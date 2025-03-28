@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   pull_request:
-    types: [labeled, unlabeled, opened, synchronize]
+    types: [edited ,labeled, unlabeled, opened, synchronize]
   push:
     branches:
       - develop
@@ -35,25 +35,14 @@ jobs:
         
     steps:
       - uses: actions/checkout@v2
-      - uses: ahmadnassri/action-workflow-queue@v1
-      - name: Get data Pull Request
-        if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
-        uses: actions/github-script@v6
-        id: get_pr
-        with:
-          script: |
-            const prUrl = context.payload.issue.pull_request.url;
-            const prNumber = context.payload.issue.number;
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-            console.log('PR DATA', pr);
             
-            core.setOutput('title', pr.title);
-            core.setOutput('html_url', pr.html_url);
-            core.setOutput('user_login', pr.user.login);
+      - name: Manger Labels
+        uses: ./.github/actions/manager-labels
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          required_labels: '["CR1", "APPROVAL"]'
+          skip_labels_check: '["DO MERGE"]'
+
 
       - name: Assign PR creator
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
@@ -187,84 +176,6 @@ jobs:
             } catch (error) {
               console.error('Błąd podczas cofania recenzji:', error);
             }
-
-      - name: Check Labels
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const { owner, repo } = context.repo;
-            
-            const prBranch = context.payload.pull_request.head.ref;
-            const isHotfixBranch = prBranch.startsWith('hotfix');
-            
-            const { data: prLabels } = await github.rest.issues.listLabelsOnIssue({
-              owner,
-              repo,
-              issue_number: prNumber,
-            });
-            
-            const prLabelNames = prLabels.map(label => label.name);
-            const hasCRLabel = prLabelNames.some(name => /CR/.test(name));
-            
-            if (!hasCRLabel && prLabelNames.includes('APPROVAL')) {
-              try {
-                await github.rest.issues.removeLabel({
-                  owner,
-                  repo,
-                  issue_number: prNumber,
-                  name: 'APPROVAL'
-                });
-                console.log('Usunięto etykietę APPROVAL, ponieważ brakuje etykiet zawierających "CR".');
-              } catch (error) {
-                  console.error('Nie udało się usunąć etykiety APPROVAL:', error);
-                }
-              }
-
-            
-            const bypassLabels = ['Do Merge'];
-            const hasBypassLabel = prLabels.some(label => bypassLabels.includes(label.name));
-            if (hasBypassLabel) {
-              console.log('PR posiada etykietę umożliwiającą pominięcie innych sprawdzeń.');
-              return;
-            }
-
-            if (!isHotfixBranch) {
-              const hasDocumentationLabel = prLabels.some(label => label.name === 'Documentation' || label.name === 'Not Documentation');
-              if (!hasDocumentationLabel) {
-                core.setFailed('PR musi mieć etykietę DOCUMENTATION lub NOT DOCUMENTATION.');
-              }
-            } else {
-              console.log('Gałąź hotfix, nie sprawdzam etykiet DOCUMENTATION.');
-            }
-            
-            const requiredLabels = ['QA Dev', 'CR1', 'CR2'];
-            requiredLabels.forEach(label => {
-              const hasLabel = prLabels.some(prLabel => prLabel.name === label);
-
-              if (!hasLabel) {
-                core.setFailed(`PR nie ma wymaganej etykiety ${label}.`);
-              }
-            });
-
-            // Pobranie listy wydarzeń związanych z PR
-            const events = await github.rest.issues.listEventsForTimeline({
-              owner,
-              repo,
-              issue_number: prNumber,
-            });
-            events.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            requiredLabels.forEach(label => {
-              const labelAddEvent = events.data.find(event => event.event === 'labeled' && event.label.name === label && event.actor.login === context.actor);
-              const labelRemoveEvent = events.data.find(event => event.event === 'unlabeled' && event.label.name === label && event.actor.login === context.actor);
-              if (labelAddEvent && labelAddEvent.actor.login === context.payload.pull_request.user.login) {
-                if (!labelRemoveEvent || labelAddEvent.created_at > labelRemoveEvent.created_at) {
-                  core.setFailed(`Nie można samemu sobie nadać labelki ${label}.`);
-                }
-              }
-            });
 
       - name: Checkout repository
         if: github.event_name == 'pull_request'

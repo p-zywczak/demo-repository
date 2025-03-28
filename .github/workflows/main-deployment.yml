@@ -19,6 +19,14 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Testowanie branch creator
+        uses: ./.github/actions/release-branch-synchronizer
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ver: 'v1.0.0.0'
+          repo_owner: 'p-zywczak'
+          repo_name: 'demo-repository-2'
+
       - name: Extract Version from Commit Message
         id: extract_version
         run: |
