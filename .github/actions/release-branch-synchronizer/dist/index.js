@@ -30000,7 +30000,7 @@ class ReleaseBranchSynchronizer {
         const { data: refData } = await this.githubApi.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
             owner: this.repoOwner,
             repo: this.repoName,
-            ref: `heads/${latestVersion}`
+            ref: `heads/${latestReleaseBranch}`
         });
         core.info(`Newest branch release: ${latestReleaseBranch}`);
         core.info(`${refData.object.sha}`);
