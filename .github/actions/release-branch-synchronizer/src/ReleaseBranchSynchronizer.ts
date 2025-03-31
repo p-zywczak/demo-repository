@@ -22,9 +22,9 @@ export class ReleaseBranchSynchronizer {
         })
         const exists = branches.some(branch => branch.name === branchNameToCheck)
         if(exists) {
-            core.info(`Release branch '${branchNameToCheck}' already exists in the repository`);
+            core.info(`Release branch '${branchNameToCheck}' already exists in other repository`);
         } else {
-            core.info(`Release branch '${branchNameToCheck}' does not exist in the repository.`);
+            core.info(`Release branch '${branchNameToCheck}' does not exist in other repository.`);
         }
         return exists;
     }
@@ -40,7 +40,7 @@ export class ReleaseBranchSynchronizer {
                 'X-GitHub-Api-Version': '2022-11-28'
             }
         });
-        core.info(`Created empty release branch`);
+        core.info(`Created empty release branch in other repo release/${this.ver}`);
     }
     private async fetchLatestSha():Promise<string> {
         const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
@@ -68,7 +68,7 @@ export class ReleaseBranchSynchronizer {
                 ref: `heads/${latestReleaseBranch}`
             }
         );
-        core.info(`Newest branch release: ${latestReleaseBranch}`);
+        core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
         return refData.object.sha;
     }
 }
