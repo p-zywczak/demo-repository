@@ -2,7 +2,7 @@ name: 'Release Branch Synchronizer'
 description: 'It is used to update the version in the second repository to ensure both repositories have the same version'
 inputs:
   token:
-    description: 'Github token (GITHUB_TOKEN)'
+    description: 'Github PAT token'
     required: true
   ver:
     description: 'Version release'
