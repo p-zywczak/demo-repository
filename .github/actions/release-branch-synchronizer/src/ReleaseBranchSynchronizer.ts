@@ -39,6 +39,11 @@ export class ReleaseBranchSynchronizer {
         const releaseBranches = branches
             .map((branch: any) => branch.name)
             .filter((name: string) => /^release\/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/.test(name));
-        core.info(`${releaseBranches}`);
+
+        const versions = releaseBranches.map(name => name.replace(/^release\//, ''));
+        const sortedVersions = versions.sort((a, b) =>
+            a.localeCompare(b, undefined, { numeric: true })
+        );
+        core.info(`${sortedVersions}`);
     }
 }
