@@ -29982,6 +29982,20 @@ class ReleaseBranchSynchronizer {
         }
         return exists;
     }
+    async createEmptyRelease() {
+        const latestReleaseSHA = await this.fetchLatestSha();
+        const branchRef = `refs/heads/release/${this.ver}`;
+        await this.githubApi.request('POST /repos/{owner}/{repo}/git/refs', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            ref: branchRef,
+            sha: latestReleaseSHA,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
+        core.info(`Created empty release branch`);
+    }
     async fetchLatestSha() {
         const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
             owner: this.repoOwner,
@@ -30003,7 +30017,7 @@ class ReleaseBranchSynchronizer {
             ref: `heads/${latestReleaseBranch}`
         });
         core.info(`Newest branch release: ${latestReleaseBranch}`);
-        core.info(`${refData.object.sha}`);
+        return refData.object.sha;
     }
 }
 exports.ReleaseBranchSynchronizer = ReleaseBranchSynchronizer;
@@ -30063,7 +30077,7 @@ async function run() {
         process.exit(0);
     }
     else {
-        await releaseBranchSynchronizer.fetchLatestSha();
+        await releaseBranchSynchronizer.createEmptyRelease();
     }
 }
 run();
