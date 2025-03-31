@@ -45,13 +45,13 @@ export class ReleaseBranchSynchronizer {
             a.localeCompare(b, undefined, { numeric: true })
         );
         const latestVersion = sortedVersions[sortedVersions.length - 1];
-        const latestReleaseBranch = `release/${latestVersion}`;
+        const latestReleaseBranch:string = `release/${latestVersion}`;
         const { data: refData } = await this.githubApi.request(
             'GET /repos/{owner}/{repo}/git/ref/{ref}',
             {
                 owner: this.repoOwner,
                 repo: this.repoName,
-                ref: `heads/${latestVersion}`
+                ref: `heads/${latestReleaseBranch}`
             }
         );
         core.info(`Newest branch release: ${latestReleaseBranch}`);
