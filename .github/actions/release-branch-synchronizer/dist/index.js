@@ -29962,6 +29962,8 @@ class ReleaseBranchSynchronizer {
         this.repoOwner = repoOwner;
         this.repoName = repoName;
     }
+    async fetchBranches() {
+    }
     async checkReleaseBranchExists() {
         const branchNameToCheck = `release/${this.ver}`;
         const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
@@ -29971,7 +29973,6 @@ class ReleaseBranchSynchronizer {
                 'X-GitHub-Api-Version': '2022-11-28'
             }
         });
-        core.info(`${branches}`);
         const exists = branches.some(branch => branch.name === branchNameToCheck);
         if (exists) {
             core.info(`Release branch '${branchNameToCheck}' already exists in the repository`);
@@ -29980,6 +29981,19 @@ class ReleaseBranchSynchronizer {
             core.info(`Release branch '${branchNameToCheck}' does not exist in the repository.`);
         }
         return exists;
+    }
+    async fetchLatestSha() {
+        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
+        const releaseBranches = branches
+            .map((branch) => branch.name)
+            .filter((name) => /^release\/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/.test(name));
+        core.info(`${releaseBranches}`);
     }
 }
 exports.ReleaseBranchSynchronizer = ReleaseBranchSynchronizer;
@@ -30039,6 +30053,7 @@ async function run() {
         process.exit(0);
     }
     else {
+        await releaseBranchSynchronizer.fetchLatestSha();
     }
 }
 run();

@@ -11,7 +11,7 @@ async function run(): Promise<void> {
     if(await releaseBranchSynchronizer.checkReleaseBranchExists()) {
         process.exit(0);
     } else {
-
+        await releaseBranchSynchronizer.fetchLatestSha();
     }
 }
 
