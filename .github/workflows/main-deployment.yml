@@ -33,7 +33,7 @@ jobs:
         uses: ./.github/actions/release-branch-synchronizer
         with:
           token: ${{ secrets.TOKEN_PAT }}
-          ver: ${VER}
+          ver: ${{ env.VER }}
           repo_owner: ${{ vars.REPO_OWNER }}
           repo_name: ${{ vars.REPO_NAME }}
 
