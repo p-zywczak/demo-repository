@@ -30052,6 +30052,9 @@ class ReleaseBranchSynchronizer {
             repo: this.repoName,
             path: filePath,
             ref: branch,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
         });
         return { content: fileData.content, sha: fileData.sha };
     }

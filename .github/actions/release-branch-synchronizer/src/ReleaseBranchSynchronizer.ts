@@ -108,6 +108,9 @@ export class ReleaseBranchSynchronizer {
                 repo: this.repoName,
                 path: filePath,
                 ref: branch,
+                headers: {
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
             }
         ) as { data: { content: string; sha: string } };
 
