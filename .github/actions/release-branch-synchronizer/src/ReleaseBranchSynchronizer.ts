@@ -71,4 +71,46 @@ export class ReleaseBranchSynchronizer {
         core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
         return refData.object.sha;
     }
+    public async updateVersion() {
+        const branch = `release/${this.ver}`;
+        const filePath = "package.json";
+        try {
+            const fileData = await this.getFile(filePath, branch);
+            const decodedContent:string = Buffer.from(fileData.content, 'base64').toString('utf8');
+            const packageJson = JSON.parse(decodedContent);
+            packageJson.version = this.ver;
+            const updatedContent:string = Buffer.from(JSON.stringify(packageJson, null, 2)).toString('base64');
+            await this.githubApi.request(
+                'PUT /repos/{owner}/{repo}/contents/{path}',
+                {
+                    owner: this.repoOwner,
+                    repo: this.repoName,
+                    path: filePath,
+                    message: `chore: update package.json version to v${this.ver}`,
+                    content: updatedContent,
+                    branch: branch,
+                    sha: fileData.sha,
+                    committer: {
+                        name: 'GitHub Action',
+                        email: 'actions@github.com',
+                    },
+                }
+            );
+        } catch (error) {
+            core.setFailed(`Failed to update package.json: ${error}`);
+        }
+    }
+    private async getFile(filePath:string, branch:string):Promise<{ content: string; sha: string }> {
+        const { data: fileData } = await this.githubApi.request(
+            'GET /repos/{owner}/{repo}/contents/{path}',
+            {
+                owner: this.repoOwner,
+                repo: this.repoName,
+                path: filePath,
+                ref: branch,
+            }
+        ) as { data: { content: string; sha: string } };
+
+        return { content: fileData.content, sha: fileData.sha};
+    }
 }

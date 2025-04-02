@@ -13,6 +13,9 @@ inputs:
   repo_name:
     description: 'Name repo from the second repository'
     required: true
+  backend:
+    description: 'Specifies whether the repository contains backend code (true/false)'
+    required: true
 runs:
   using: 'node20'
   main: 'dist/index.js'
