@@ -30009,6 +30009,7 @@ class ReleaseBranchSynchronizer {
             .filter((name) => /^release\/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/.test(name));
         const versions = releaseBranches.map(name => name.replace(/^release\//, ''));
         const sortedVersions = versions.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        core.info(`${sortedVersions}`);
         const latestVersion = sortedVersions[sortedVersions.length - 1];
         const latestReleaseBranch = `release/${latestVersion}`;
         const { data: refData } = await this.githubApi.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
