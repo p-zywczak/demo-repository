@@ -36,6 +36,7 @@ jobs:
           ver: ${{ env.VER }}
           repo_owner: ${{ vars.REPO_OWNER }}
           repo_name: ${{ vars.REPO_NAME }}
+          backend: true
 
 
 
