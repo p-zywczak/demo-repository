@@ -30060,7 +30060,7 @@ class ReleaseBranchSynchronizer {
         return { content: fileData.content, sha: fileData.sha };
     }
     async createPullRequest() {
-        const targetBranches = ['main', 'develop'];
+        const targetBranches = ['main'];
         for (const base of targetBranches) {
             const response = await this.githubApi.request('POST /repos/{owner}/{repo}/pulls', {
                 owner: this.repoOwner,
