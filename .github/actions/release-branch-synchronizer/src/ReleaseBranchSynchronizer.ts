@@ -114,13 +114,13 @@ export class ReleaseBranchSynchronizer {
         return { content: fileData.content, sha: fileData.sha};
     }
     public async createPullRequest():Promise<void>{
-        const targetBranches:string[] = ['main'];
+        const targetBranches:string[] = ['main', 'develop'];
         for (const base of targetBranches) {
             const response = await this.githubApi.request('POST /repos/{owner}/{repo}/pulls', {
                 owner: this.repoOwner,
                 repo: this.repoName,
                 title: `Merge release/${this.ver} into main`,
-                body: `Automated PR for version ${this.ver} to the develop branch`,
+                body: `Automated PR for version ${this.ver} to the ${base} branch`,
                 head: `release/${this.ver}`,
                 base: base,
                 headers: {

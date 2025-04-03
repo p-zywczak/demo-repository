@@ -29,7 +29,7 @@ jobs:
           fi
           echo "VER=$VERSION" >> $GITHUB_ENV
 
-      - name: Testowanie branch creator
+      - name: Manager for maintaining the same version
         uses: ./.github/actions/release-branch-synchronizer
         with:
           token: ${{ secrets.TOKEN_PAT }}
