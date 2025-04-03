@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
 import { GitHub } from '@actions/github/lib/utils';
 export class ReleaseBranchSynchronizer {
-    private branchesCached: { name: string }[] | null = null;
     constructor(
         private readonly githubApi: InstanceType<typeof GitHub>,
         private readonly ver: string,
@@ -9,22 +8,15 @@ export class ReleaseBranchSynchronizer {
         private readonly repoName: string,
     ) {
     }
-    async getBranches():Promise<{ name: string }[]> {
-        if(!this.branchesCached) {
-            const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
-                owner: this.repoOwner,
-                repo: this.repoName,
-                headers: {
-                    'X-GitHub-Api-Version': '2022-11-28'
-                }
-            })
-            this.branchesCached = branches.map((branch: any) => branch.name);
-        }
-        return this.branchesCached;
-    }
     async checkReleaseBranchExists():Promise<boolean> {
         const branchNameToCheck:string = `release/${this.ver}`
-        const branches = await this.getBranches();
+        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        })
         const exists = branches.some(branch => branch.name === branchNameToCheck)
         if(exists) {
             core.info(`Release branch '${branchNameToCheck}' already exists in other repository`);
@@ -48,7 +40,13 @@ export class ReleaseBranchSynchronizer {
         core.info(`Created empty release branch in other repo release/${this.ver}`);
     }
     private async fetchLatestSha():Promise<string> {
-        const branches = await this.getBranches();
+        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        })
         const releaseBranches = branches
             .map((branch: any) => branch.name)
             .filter((name: string) => /^release\/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/.test(name));
