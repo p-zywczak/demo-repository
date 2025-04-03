@@ -29961,24 +29961,16 @@ class ReleaseBranchSynchronizer {
         this.ver = ver;
         this.repoOwner = repoOwner;
         this.repoName = repoName;
-        this.branchesCached = null;
-    }
-    async getBranches() {
-        if (!this.branchesCached) {
-            const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
-                owner: this.repoOwner,
-                repo: this.repoName,
-                headers: {
-                    'X-GitHub-Api-Version': '2022-11-28'
-                }
-            });
-            this.branchesCached = branches.map((branch) => branch.name);
-        }
-        return this.branchesCached;
     }
     async checkReleaseBranchExists() {
         const branchNameToCheck = `release/${this.ver}`;
-        const branches = await this.getBranches();
+        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
         const exists = branches.some(branch => branch.name === branchNameToCheck);
         if (exists) {
             core.info(`Release branch '${branchNameToCheck}' already exists in other repository`);
@@ -30003,7 +29995,13 @@ class ReleaseBranchSynchronizer {
         core.info(`Created empty release branch in other repo release/${this.ver}`);
     }
     async fetchLatestSha() {
-        const branches = await this.getBranches();
+        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
         const releaseBranches = branches
             .map((branch) => branch.name)
             .filter((name) => /^release\/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/.test(name));
