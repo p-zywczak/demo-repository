@@ -30078,6 +30078,7 @@ class ReleaseBranchSynchronizer {
     }
     async createTagOnMain() {
         const mainSha = await this.fetchSha('main');
+        core.info(`SHA main ${mainSha}`);
         const response = await this.githubApi.request('POST /repos/{owner}/{repo}/git/refs', {
             owner: this.repoOwner,
             repo: this.repoName,
