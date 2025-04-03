@@ -26,7 +26,7 @@ export class ReleaseBranchSynchronizer {
         return exists;
     }
     async createEmptyRelease():Promise<void>{
-        const latestReleaseSHA:string = await this.fetchLatestSha();
+        const latestReleaseSHA:string = await this.fetchLatestReleaseSha();
         const branchRef = `refs/heads/release/${this.ver}`;
         await this.githubApi.request('POST /repos/{owner}/{repo}/git/refs', {
             owner: this.repoOwner,
@@ -39,7 +39,7 @@ export class ReleaseBranchSynchronizer {
         });
         core.info(`Created empty release branch in other repo release/${this.ver}`);
     }
-    private async fetchLatestSha():Promise<string> {
+    private async fetchLatestReleaseSha():Promise<string> {
         const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
             owner: this.repoOwner,
             repo: this.repoName,
@@ -57,15 +57,19 @@ export class ReleaseBranchSynchronizer {
         );
         const latestVersion = sortedVersions[sortedVersions.length - 1];
         const latestReleaseBranch:string = `release/${latestVersion}`;
+        core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
+
+        return await this.fetchSha(latestReleaseBranch);
+    }
+    private async fetchSha(branchName:string):Promise<string>{
         const { data: refData } = await this.githubApi.request(
             'GET /repos/{owner}/{repo}/git/ref/{ref}',
             {
                 owner: this.repoOwner,
                 repo: this.repoName,
-                ref: `heads/${latestReleaseBranch}`
+                ref: `heads/${branchName}`
             }
         );
-        core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
         return refData.object.sha;
     }
     public async updateVersion():Promise<void> {
@@ -129,5 +133,18 @@ export class ReleaseBranchSynchronizer {
                 }
             });
         }
+    }
+    public async createTagOnMain():Promise<void> {
+        const mainSha:string = await this.fetchSha('main');
+        const response = await this.githubApi.request('POST /repos/{owner}/{repo}/git/refs', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            ref: `refs/tags/v${this.ver}`,
+            sha: mainSha,
+            headers: {
+                Accept: 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
     }
 }

@@ -16,6 +16,8 @@ async function run(): Promise<void> {
         if(backend === 'true') {
             await releaseBranchSynchronizer.updateVersion();
             await releaseBranchSynchronizer.createPullRequest();
+        } else {
+            await releaseBranchSynchronizer.createTagOnMain();
         }
     }
 }

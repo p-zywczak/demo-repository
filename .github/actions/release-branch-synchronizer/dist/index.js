@@ -29981,7 +29981,7 @@ class ReleaseBranchSynchronizer {
         return exists;
     }
     async createEmptyRelease() {
-        const latestReleaseSHA = await this.fetchLatestSha();
+        const latestReleaseSHA = await this.fetchLatestReleaseSha();
         const branchRef = `refs/heads/release/${this.ver}`;
         await this.githubApi.request('POST /repos/{owner}/{repo}/git/refs', {
             owner: this.repoOwner,
@@ -29994,7 +29994,7 @@ class ReleaseBranchSynchronizer {
         });
         core.info(`Created empty release branch in other repo release/${this.ver}`);
     }
-    async fetchLatestSha() {
+    async fetchLatestReleaseSha() {
         const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
             owner: this.repoOwner,
             repo: this.repoName,
@@ -30009,12 +30009,15 @@ class ReleaseBranchSynchronizer {
         const sortedVersions = versions.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
         const latestVersion = sortedVersions[sortedVersions.length - 1];
         const latestReleaseBranch = `release/${latestVersion}`;
+        core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
+        return await this.fetchSha(latestReleaseBranch);
+    }
+    async fetchSha(branchName) {
         const { data: refData } = await this.githubApi.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
             owner: this.repoOwner,
             repo: this.repoName,
-            ref: `heads/${latestReleaseBranch}`
+            ref: `heads/${branchName}`
         });
-        core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
         return refData.object.sha;
     }
     async updateVersion() {
@@ -30072,6 +30075,19 @@ class ReleaseBranchSynchronizer {
                 }
             });
         }
+    }
+    async createTagOnMain() {
+        const mainSha = await this.fetchSha('main');
+        const response = await this.githubApi.request('POST /repos/{owner}/{repo}/git/refs', {
+            owner: this.repoOwner,
+            repo: this.repoName,
+            ref: `refs/tags/v${this.ver}`,
+            sha: mainSha,
+            headers: {
+                Accept: 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
     }
 }
 exports.ReleaseBranchSynchronizer = ReleaseBranchSynchronizer;
@@ -30136,6 +30152,9 @@ async function run() {
         if (backend === 'true') {
             await releaseBranchSynchronizer.updateVersion();
             await releaseBranchSynchronizer.createPullRequest();
+        }
+        else {
+            await releaseBranchSynchronizer.createTagOnMain();
         }
     }
 }
