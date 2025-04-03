@@ -15,6 +15,7 @@ async function run(): Promise<void> {
         await releaseBranchSynchronizer.createEmptyRelease();
         if(backend === 'true') {
             await releaseBranchSynchronizer.updateVersion();
+            await releaseBranchSynchronizer.createPullRequest();
         }
     }
 }
