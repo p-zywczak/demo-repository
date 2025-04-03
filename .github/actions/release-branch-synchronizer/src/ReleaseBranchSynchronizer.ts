@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import { GitHub } from '@actions/github/lib/utils';
 export class ReleaseBranchSynchronizer {
+    private branchesCached: { name: string }[] | null = null;
     constructor(
         private readonly githubApi: InstanceType<typeof GitHub>,
         private readonly ver: string,
@@ -8,18 +9,22 @@ export class ReleaseBranchSynchronizer {
         private readonly repoName: string,
     ) {
     }
-    async fetchBranches() {
-
+    async getBranches():Promise<{ name: string }[]> {
+        if(!this.branchesCached) {
+            const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
+                owner: this.repoOwner,
+                repo: this.repoName,
+                headers: {
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            })
+            this.branchesCached = branches.map((branch: any) => branch.name);
+        }
+        return this.branchesCached;
     }
     async checkReleaseBranchExists():Promise<boolean> {
         const branchNameToCheck:string = `release/${this.ver}`
-        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
-            owner: this.repoOwner,
-            repo: this.repoName,
-            headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-            }
-        })
+        const branches = await this.getBranches();
         const exists = branches.some(branch => branch.name === branchNameToCheck)
         if(exists) {
             core.info(`Release branch '${branchNameToCheck}' already exists in other repository`);
@@ -43,13 +48,7 @@ export class ReleaseBranchSynchronizer {
         core.info(`Created empty release branch in other repo release/${this.ver}`);
     }
     private async fetchLatestSha():Promise<string> {
-        const { data: branches } = await this.githubApi.request('GET /repos/{owner}/{repo}/branches', {
-            owner: this.repoOwner,
-            repo: this.repoName,
-            headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-            }
-        })
+        const branches = await this.getBranches();
         const releaseBranches = branches
             .map((branch: any) => branch.name)
             .filter((name: string) => /^release\/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/.test(name));
@@ -58,7 +57,6 @@ export class ReleaseBranchSynchronizer {
         const sortedVersions = versions.sort((a, b) =>
             a.localeCompare(b, undefined, { numeric: true })
         );
-        core.info(`${sortedVersions}`);
         const latestVersion = sortedVersions[sortedVersions.length - 1];
         const latestReleaseBranch:string = `release/${latestVersion}`;
         const { data: refData } = await this.githubApi.request(
@@ -72,7 +70,7 @@ export class ReleaseBranchSynchronizer {
         core.info(`Newest branch release in other repo: ${latestReleaseBranch}`);
         return refData.object.sha;
     }
-    public async updateVersion() {
+    public async updateVersion():Promise<void> {
         const branch = `release/${this.ver}`;
         const filePath = "package.json";
         try {
@@ -87,7 +85,7 @@ export class ReleaseBranchSynchronizer {
                     owner: this.repoOwner,
                     repo: this.repoName,
                     path: filePath,
-                    message: `chore: update package.json version to v${this.ver}`,
+                    message: `update package.json version to v${this.ver}`,
                     content: updatedContent,
                     branch: branch,
                     sha: fileData.sha,
