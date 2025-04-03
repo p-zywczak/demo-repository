@@ -147,5 +147,6 @@ export class ReleaseBranchSynchronizer {
                 'X-GitHub-Api-Version': '2022-11-28'
             }
         });
+        core.info(`${response}`);
     }
 }
