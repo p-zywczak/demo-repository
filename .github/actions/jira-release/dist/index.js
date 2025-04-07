@@ -81682,13 +81682,14 @@ exports.Jira = void 0;
 const core = __importStar(__nccwpck_require__(37484));
 const jira_js_1 = __nccwpck_require__(7450);
 class Jira {
-    constructor(email, token, url, projectId, environment, idAwaitingToTesting) {
+    constructor(email, token, url, projectId, environment, idAwaitingToTesting, githubRef) {
         this.email = email;
         this.token = token;
         this.url = url;
         this.projectId = projectId;
         this.environment = environment;
         this.idAwaitingToTesting = idAwaitingToTesting;
+        this.githubRef = githubRef;
         this.client = new jira_js_1.Version3Client({
             host: url,
             authentication: {
@@ -81698,6 +81699,7 @@ class Jira {
                 }
             }
         });
+        this.versionName = `[${this.environment}] v${githubRef.split('/').pop()}`;
         this.issueKeys = [];
     }
     async fetchTask() {
@@ -81716,6 +81718,13 @@ class Jira {
             });
         }
         core.info('Successful - updated transaction');
+    }
+    async createRelease() {
+        await this.client.projectVersions.createVersion({
+            name: this.versionName,
+            projectId: this.projectId,
+            released: false
+        });
     }
 }
 exports.Jira = Jira;
@@ -81771,9 +81780,11 @@ async function run() {
     const projectId = core.getInput('jira_project_id');
     const environment = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
-    const jira = new Jira_1.Jira(email, token, url, projectId, environment, idAwaitingToTesting);
+    const githubRef = core.getInput('github_ref');
+    const jira = new Jira_1.Jira(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
     await jira.fetchTask();
     await jira.updateTaskStatus();
+    await jira.createRelease();
 }
 run();
 

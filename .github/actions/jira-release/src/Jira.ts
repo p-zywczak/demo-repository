@@ -5,13 +5,15 @@ export class Jira
 {
     protected client:Version3Client;
     private issueKeys:string[];
+    private versionName:string;
     constructor(
         private readonly email:string,
         private readonly token:string,
         private readonly url:string,
         private readonly projectId:string,
         private readonly environment:string,
-        private readonly idAwaitingToTesting:string
+        private readonly idAwaitingToTesting:string,
+        private readonly githubRef:string,
     ) {
         this.client = new Version3Client({
             host: url,
@@ -22,6 +24,7 @@ export class Jira
                 }
             }
         });
+        this.versionName = `[${this.environment}] v${githubRef.split('/').pop()}`;
         this.issueKeys = [];
     }
     public async fetchTask():Promise<void> {
@@ -39,5 +42,12 @@ export class Jira
             });
         }
         core.info('Successful - updated transaction');
+    }
+    public async createRelease():Promise<void> {
+        await this.client.projectVersions.createVersion({
+            name: this.versionName,
+            projectId: this.projectId,
+            released: false
+        })
     }
 }

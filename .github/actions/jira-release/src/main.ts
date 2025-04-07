@@ -8,10 +8,12 @@ async function run(): Promise<void> {
     const projectId:string = core.getInput('jira_project_id');
     const environment:string = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
+    const githubRef:string = core.getInput('github_ref');
 
-    const jira:Jira = new Jira(email, token, url, projectId, environment, idAwaitingToTesting);
+    const jira:Jira = new Jira(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
     await jira.fetchTask();
     await jira.updateTaskStatus();
+    await jira.createRelease();
 }
 
 run();

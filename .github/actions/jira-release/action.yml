@@ -18,6 +18,9 @@ inputs:
   environment:
     description: 'Label on task - backend/fronted'
     required: true
+  github_ref:
+    description: 'Github branch reference'
+    required: true
 runs:
   using: 'node20'
   main: 'dist/index.js'
