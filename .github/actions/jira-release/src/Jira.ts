@@ -49,5 +49,6 @@ export class Jira
             projectId: this.projectId,
             released: false
         })
+        core.info(`Successful - release created in jira: ${this.versionName}`);
     }
 }
