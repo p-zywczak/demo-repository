@@ -81699,7 +81699,7 @@ class Jira {
                 }
             }
         });
-        this.versionName = `[${this.environment}] v${githubRef.split('/').pop()}`;
+        this.versionName = `[${this.environment}] ${githubRef.split('/').pop()}`;
         this.issueKeys = [];
     }
     async fetchTask() {
