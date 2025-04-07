@@ -33,7 +33,7 @@ jobs:
           jira_url: ${{ secrets.JIRA_URL }}
           jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
           environment: ${{ vars.ENVIRONMENT }}
-          jira_id_awaiting_to_testing: ${{ JIRA_ID_AWAITING_TO_TESTING }}
+          jira_id_awaiting_to_testing: ${{ vars.JIRA_ID_AWAITING_TO_TESTING }}
 
   rollback_release:
     name: Rollback release
