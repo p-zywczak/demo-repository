@@ -14,6 +14,7 @@ async function run(): Promise<void> {
     await jira.fetchTask();
     await jira.updateTaskStatus();
     await jira.createRelease();
+    await jira.assignIssuesToRelease();
 }
 
 run();

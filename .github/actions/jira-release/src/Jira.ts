@@ -51,4 +51,17 @@ export class Jira
         })
         core.info(`Successful - release created in jira: ${this.versionName}`);
     }
+    public async assignIssuesToRelease():Promise<void> {
+        for (const key of this.issueKeys) {
+            core.info(`Assign issues ${key} to version ${this.versionName}`);
+            await this.client.issues.editIssue({
+                issueIdOrKey: key,
+                update: {
+                    fixVersions: [
+                        { add: { name: this.versionName } }
+                    ]
+                }
+            });
+        }
+    }
 }

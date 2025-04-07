@@ -81727,6 +81727,19 @@ class Jira {
         });
         core.info(`Successful - release created in jira: ${this.versionName}`);
     }
+    async assignIssuesToRelease() {
+        for (const key of this.issueKeys) {
+            core.info(`Assign issues ${key} to version ${this.versionName}`);
+            await this.client.issues.editIssue({
+                issueIdOrKey: key,
+                update: {
+                    fixVersions: [
+                        { add: { name: this.versionName } }
+                    ]
+                }
+            });
+        }
+    }
 }
 exports.Jira = Jira;
 
@@ -81786,6 +81799,7 @@ async function run() {
     await jira.fetchTask();
     await jira.updateTaskStatus();
     await jira.createRelease();
+    await jira.assignIssuesToRelease();
 }
 run();
 
