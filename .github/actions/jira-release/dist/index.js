@@ -81755,9 +81755,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(37484));
 const Jira_1 = __nccwpck_require__(52511);
 async function run() {
-    const email = JSON.parse(core.getInput('jira_email'));
-    const token = JSON.parse(core.getInput('jira_token'));
-    const url = JSON.parse(core.getInput('jira_url'));
+    const email = core.getInput('jira_email');
+    const token = core.getInput('jira_token');
+    const url = core.getInput('jira_url');
     const jira = new Jira_1.Jira(email, token, url);
     await jira.fetchTask();
 }
