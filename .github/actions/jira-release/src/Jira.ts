@@ -38,6 +38,6 @@ export class Jira
                 transition: { id: this.idAwaitingToTesting}
             });
         }
-        core.info('Successful');
+        core.info('Successful - updated transaction');
     }
 }
