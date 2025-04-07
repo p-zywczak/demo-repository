@@ -7,9 +7,11 @@ async function run(): Promise<void> {
     const url:string = core.getInput('jira_url');
     const projectId:string = core.getInput('jira_project_id');
     const environment:string = core.getInput('environment');
+    const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
 
-    const jira:Jira = new Jira(email, token, url, projectId, environment);
+    const jira:Jira = new Jira(email, token, url, projectId, environment, idAwaitingToTesting);
     await jira.fetchTask();
+    await jira.updateTaskStatus();
 }
 
 run();

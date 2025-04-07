@@ -11,6 +11,7 @@ export class Jira
         private readonly url:string,
         private readonly projectId:string,
         private readonly environment:string,
+        private readonly idAwaitingToTesting:string
     ) {
         this.client = new Version3Client({
             host: url,
@@ -25,10 +26,18 @@ export class Jira
     }
     public async fetchTask():Promise<void> {
         const jql = `status="AWAITING TO RELEASE" AND labels="${this.environment}" AND project="${this.projectId}" AND labels NOT IN ("SkipTesting")`;
-        core.info(`JQL: ${jql}`);
         const searchResponse = await this.client.issueSearch.searchForIssuesUsingJql({ jql });
         const issues: any[] = searchResponse.issues ?? [];
         this.issueKeys = issues.map((issue: any) => issue.key);
-        core.info(`Znalezione zadania: ${this.issueKeys.join(', ')}`);
+        core.info(`Found tasks: ${this.issueKeys.join(', ')}`);
+    }
+    public async updateTaskStatus():Promise<void> {
+        for (const key of this.issueKeys) {
+            await this.client.issues.doTransition({
+                issueIdOrKey: key,
+                transition: { id: this.idAwaitingToTesting}
+            });
+        }
+        core.info('Successful');
     }
 }

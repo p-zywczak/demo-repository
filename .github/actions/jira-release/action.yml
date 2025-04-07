@@ -13,6 +13,8 @@ inputs:
   jira_project_id:
     description: 'Jira project ID'
     required: true
+  jira_id_awaiting_to_testing:
+    description: 'Id of status awaiting to testing'
   environment:
     description: 'Label on task - backend/fronted'
     required: true

@@ -81682,12 +81682,13 @@ exports.Jira = void 0;
 const core = __importStar(__nccwpck_require__(37484));
 const jira_js_1 = __nccwpck_require__(7450);
 class Jira {
-    constructor(email, token, url, projectId, environment) {
+    constructor(email, token, url, projectId, environment, idAwaitingToTesting) {
         this.email = email;
         this.token = token;
         this.url = url;
         this.projectId = projectId;
         this.environment = environment;
+        this.idAwaitingToTesting = idAwaitingToTesting;
         this.client = new jira_js_1.Version3Client({
             host: url,
             authentication: {
@@ -81702,11 +81703,19 @@ class Jira {
     async fetchTask() {
         var _a;
         const jql = `status="AWAITING TO RELEASE" AND labels="${this.environment}" AND project="${this.projectId}" AND labels NOT IN ("SkipTesting")`;
-        core.info(`JQL: ${jql}`);
         const searchResponse = await this.client.issueSearch.searchForIssuesUsingJql({ jql });
         const issues = (_a = searchResponse.issues) !== null && _a !== void 0 ? _a : [];
         this.issueKeys = issues.map((issue) => issue.key);
-        core.info(`Znalezione zadania: ${this.issueKeys.join(', ')}`);
+        core.info(`Found tasks: ${this.issueKeys.join(', ')}`);
+    }
+    async updateTaskStatus() {
+        for (const key of this.issueKeys) {
+            await this.client.issues.doTransition({
+                issueIdOrKey: key,
+                transition: { id: this.idAwaitingToTesting }
+            });
+        }
+        core.info('Successful');
     }
 }
 exports.Jira = Jira;
@@ -81761,8 +81770,10 @@ async function run() {
     const url = core.getInput('jira_url');
     const projectId = core.getInput('jira_project_id');
     const environment = core.getInput('environment');
-    const jira = new Jira_1.Jira(email, token, url, projectId, environment);
+    const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
+    const jira = new Jira_1.Jira(email, token, url, projectId, environment, idAwaitingToTesting);
     await jira.fetchTask();
+    await jira.updateTaskStatus();
 }
 run();
 
