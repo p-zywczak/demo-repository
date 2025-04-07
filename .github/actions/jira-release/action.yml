@@ -1,0 +1,15 @@
+name: 'Jira Release'
+description: 'Jira release and assign tasks'
+inputs:
+  jira_email:
+    description: 'Jira email'
+    required: true
+  jira_token:
+    description: 'Jira API token for authentication'
+    required: true
+  jira_url:
+    description: 'Jira URL'
+    required: true
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -10,6 +10,25 @@ on:
 permissions: write-all
 
 jobs:
+  jira-release1:
+    name: Create release on JIRA -testowanie
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
+    steps:
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: JIRA MANAGER
+        uses: ./.github/actions/jira-release
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+
   rollback_release:
     name: Rollback release
     if: > 
