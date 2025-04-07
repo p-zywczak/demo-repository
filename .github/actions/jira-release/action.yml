@@ -10,6 +10,12 @@ inputs:
   jira_url:
     description: 'Jira URL'
     required: true
+  jira_project_id:
+    description: 'Jira project ID'
+    required: true
+  environment:
+    description: 'Label on task - backend/fronted'
+    required: true
 runs:
   using: 'node20'
   main: 'dist/index.js'

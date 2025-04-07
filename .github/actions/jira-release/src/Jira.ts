@@ -9,6 +9,8 @@ export class Jira
         private readonly email:string,
         private readonly token:string,
         private readonly url:string,
+        private readonly projectId:string,
+        private readonly environment:string,
     ) {
         this.client = new Version3Client({
             host: url,
@@ -22,8 +24,7 @@ export class Jira
         this.issueKeys = [];
     }
     public async fetchTask():Promise<void> {
-        const projectId = process.env.JIRA_PROJECT_ID;
-        const jql = `status="AWAITING TO RELEASE" AND labels="${process.env.ENVIRONMENT}" AND project="${projectId}" AND labels NOT IN ("SkipTesting")`;
+        const jql = `status="AWAITING TO RELEASE" AND labels="${this.environment}" AND project="${this.projectId}" AND labels NOT IN ("SkipTesting")`;
         core.info(`JQL: ${jql}`);
         const searchResponse = await this.client.issueSearch.searchForIssuesUsingJql({ jql });
         const issues: any[] = searchResponse.issues ?? [];

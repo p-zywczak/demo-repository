@@ -31,6 +31,8 @@ jobs:
           jira_email: ${{ secrets.JIRA_EMAIL }}
           jira_token: ${{ secrets.JIRA_TOKEN }}
           jira_url: ${{ secrets.JIRA_URL }}
+          jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
+          environment: ${{ vars.ENVIRONMENT }}
 
   rollback_release:
     name: Rollback release

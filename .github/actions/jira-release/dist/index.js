@@ -81682,10 +81682,12 @@ exports.Jira = void 0;
 const core = __importStar(__nccwpck_require__(37484));
 const jira_js_1 = __nccwpck_require__(7450);
 class Jira {
-    constructor(email, token, url) {
+    constructor(email, token, url, projectId, environment) {
         this.email = email;
         this.token = token;
         this.url = url;
+        this.projectId = projectId;
+        this.environment = environment;
         this.client = new jira_js_1.Version3Client({
             host: url,
             authentication: {
@@ -81699,8 +81701,7 @@ class Jira {
     }
     async fetchTask() {
         var _a;
-        const projectId = process.env.JIRA_PROJECT_ID;
-        const jql = `status="AWAITING TO RELEASE" AND labels="${process.env.ENVIRONMENT}" AND project="${projectId}" AND labels NOT IN ("SkipTesting")`;
+        const jql = `status="AWAITING TO RELEASE" AND labels="${this.environment}" AND project="${this.projectId}" AND labels NOT IN ("SkipTesting")`;
         core.info(`JQL: ${jql}`);
         const searchResponse = await this.client.issueSearch.searchForIssuesUsingJql({ jql });
         const issues = (_a = searchResponse.issues) !== null && _a !== void 0 ? _a : [];
@@ -81758,7 +81759,9 @@ async function run() {
     const email = core.getInput('jira_email');
     const token = core.getInput('jira_token');
     const url = core.getInput('jira_url');
-    const jira = new Jira_1.Jira(email, token, url);
+    const projectId = core.getInput('jira_project_id');
+    const environment = core.getInput('environment');
+    const jira = new Jira_1.Jira(email, token, url, projectId, environment);
     await jira.fetchTask();
 }
 run();
