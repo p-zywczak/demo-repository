@@ -11,15 +11,14 @@ async function run(): Promise<void> {
     const environment:string = core.getInput('environment');
     const idAwaitingToTesting:string = core.getInput('jira_id_awaiting_to_testing');
     const githubRef:string = core.getInput('github_ref');
-    const version:string = core.getInput('version');
     const commitMessage:string = core.getInput('commit_message');
     const type:string = core.getInput('type') as OperationTypeEnum;
 
-
-    const jira:JiraCreateRelease = new JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
+    core.info(`GithubREF: ${githubRef}`);
 
     switch (type) {
         case (OperationTypeEnum.CreateRelease):
+            const jira:JiraCreateRelease = new JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
             await jira.fetchTask();
             await jira.updateTaskStatus();
             await jira.createRelease();
@@ -28,6 +27,8 @@ async function run(): Promise<void> {
         case (OperationTypeEnum.MarkRelease):
             const jiraMark:JiraMarkRelease = new JiraMarkRelease(email, token, url, projectId, environment, commitMessage);
             await jiraMark.releaseVersion();
+            break;
+        case (OperationTypeEnum.ReviewStatusUpdater):
             break;
         default:
             core.setFailed('Unknown operation type');

@@ -81854,6 +81854,7 @@ var OperationTypeEnum;
 (function (OperationTypeEnum) {
     OperationTypeEnum["CreateRelease"] = "createRelease";
     OperationTypeEnum["MarkRelease"] = "markRelease";
+    OperationTypeEnum["ReviewStatusUpdater"] = "reviewStatusUpdater";
 })(OperationTypeEnum || (exports.OperationTypeEnum = OperationTypeEnum = {}));
 
 
@@ -81910,12 +81911,12 @@ async function run() {
     const environment = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
     const githubRef = core.getInput('github_ref');
-    const version = core.getInput('version');
     const commitMessage = core.getInput('commit_message');
     const type = core.getInput('type');
-    const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
+    core.info(`GithubREF: ${githubRef}`);
     switch (type) {
         case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):
+            const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
             await jira.fetchTask();
             await jira.updateTaskStatus();
             await jira.createRelease();
@@ -81924,6 +81925,8 @@ async function run() {
         case (OperationTypeEnum_1.OperationTypeEnum.MarkRelease):
             const jiraMark = new JiraMarkRelease_1.JiraMarkRelease(email, token, url, projectId, environment, commitMessage);
             await jiraMark.releaseVersion();
+            break;
+        case (OperationTypeEnum_1.OperationTypeEnum.ReviewStatusUpdater):
             break;
         default:
             core.setFailed('Unknown operation type');
