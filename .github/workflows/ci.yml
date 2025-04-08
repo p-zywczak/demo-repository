@@ -29,6 +29,7 @@ jobs:
           jira_id_code_review_done: ${{ vars.JIRA_ID_CODE_REVIEW_DONE }}
           github_ref: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          required_labels: '["CR1", "APPROVAL"]'
           type: 'reviewStatusUpdater'
 
   ci_cd:
