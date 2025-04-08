@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { Version3Client } from 'jira.js'
 
-export class Jira
+export class JiraCreateRelease
 {
     protected client:Version3Client;
     private issueKeys:string[];
@@ -63,5 +63,8 @@ export class Jira
                 }
             });
         }
+    }
+    public async fetchAllReleases():Promise<void> {
+
     }
 }

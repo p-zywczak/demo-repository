@@ -25,8 +25,8 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref }}
 
-      - name: JIRA MANAGER
-        uses: ./.github/actions/jira-release
+      - name: Jira manager - create release
+        uses: ./.github/actions/jira-manager
         with:
           jira_email: ${{ secrets.JIRA_EMAIL }}
           jira_token: ${{ secrets.JIRA_TOKEN }}

@@ -81639,7 +81639,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 52511:
+/***/ 88810:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -81678,10 +81678,10 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Jira = void 0;
+exports.JiraCreateRelease = void 0;
 const core = __importStar(__nccwpck_require__(37484));
 const jira_js_1 = __nccwpck_require__(7450);
-class Jira {
+class JiraCreateRelease {
     constructor(email, token, url, projectId, environment, idAwaitingToTesting, githubRef) {
         this.email = email;
         this.token = token;
@@ -81740,8 +81740,99 @@ class Jira {
             });
         }
     }
+    async fetchAllReleases() {
+    }
 }
-exports.Jira = Jira;
+exports.JiraCreateRelease = JiraCreateRelease;
+
+
+/***/ }),
+
+/***/ 74397:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JiraMarkRelease = void 0;
+const core = __importStar(__nccwpck_require__(37484));
+const jira_js_1 = __nccwpck_require__(7450);
+class JiraMarkRelease {
+    constructor(email, token, url, projectId, environment, version) {
+        this.email = email;
+        this.token = token;
+        this.url = url;
+        this.projectId = projectId;
+        this.environment = environment;
+        this.version = version;
+        this.client = new jira_js_1.Version3Client({
+            host: url,
+            authentication: {
+                basic: {
+                    email: email,
+                    apiToken: token,
+                }
+            }
+        });
+    }
+    async releaseVersion() {
+        const releases = await this.fetchAllReleases();
+        const releaseName = `[${this.environment}] v${this.version}`;
+        const targetRelease = releases.find((release) => release.name === releaseName);
+        if (!targetRelease) {
+            core.info(`Not found release: ${releaseName} in jira  `);
+        }
+        else {
+            await this.markRelease(targetRelease.id);
+        }
+    }
+    async fetchAllReleases() {
+        return this.client.projectVersions.getProjectVersions({
+            projectIdOrKey: this.projectId
+        });
+    }
+    async markRelease(releaseId) {
+        await this.client.projectVersions.updateVersion({
+            id: releaseId,
+            released: true
+        });
+        core.info('Successful - released');
+    }
+}
+exports.JiraMarkRelease = JiraMarkRelease;
 
 
 /***/ }),
@@ -81802,8 +81893,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(37484));
-const Jira_1 = __nccwpck_require__(52511);
+const JiraCreateRelease_1 = __nccwpck_require__(88810);
 const OperationTypeEnum_1 = __nccwpck_require__(61055);
+const JiraMarkRelease_1 = __nccwpck_require__(74397);
 async function run() {
     const email = core.getInput('jira_email');
     const token = core.getInput('jira_token');
@@ -81812,14 +81904,19 @@ async function run() {
     const environment = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
     const githubRef = core.getInput('github_ref');
+    const version = core.getInput('version');
     const type = core.getInput('type');
-    const jira = new Jira_1.Jira(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
+    const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
     switch (type) {
         case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):
             await jira.fetchTask();
             await jira.updateTaskStatus();
             await jira.createRelease();
             await jira.assignIssuesToRelease();
+            break;
+        case (OperationTypeEnum_1.OperationTypeEnum.MarkRelease):
+            const jiraMark = new JiraMarkRelease_1.JiraMarkRelease(email, token, url, projectId, environment, version);
+            await jiraMark.releaseVersion();
             break;
         default:
             core.setFailed('Unknown operation type');
