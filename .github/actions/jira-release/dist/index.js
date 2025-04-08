@@ -81746,6 +81746,22 @@ exports.Jira = Jira;
 
 /***/ }),
 
+/***/ 61055:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OperationTypeEnum = void 0;
+var OperationTypeEnum;
+(function (OperationTypeEnum) {
+    OperationTypeEnum["CreateRelease"] = "createRelease";
+    OperationTypeEnum["MarkRelease"] = "markRelease";
+})(OperationTypeEnum || (exports.OperationTypeEnum = OperationTypeEnum = {}));
+
+
+/***/ }),
+
 /***/ 41730:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -81787,6 +81803,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(37484));
 const Jira_1 = __nccwpck_require__(52511);
+const OperationTypeEnum_1 = __nccwpck_require__(61055);
 async function run() {
     const email = core.getInput('jira_email');
     const token = core.getInput('jira_token');
@@ -81795,11 +81812,18 @@ async function run() {
     const environment = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
     const githubRef = core.getInput('github_ref');
+    const type = core.getInput('type');
     const jira = new Jira_1.Jira(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
-    await jira.fetchTask();
-    await jira.updateTaskStatus();
-    await jira.createRelease();
-    await jira.assignIssuesToRelease();
+    switch (type) {
+        case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):
+            await jira.fetchTask();
+            await jira.updateTaskStatus();
+            await jira.createRelease();
+            await jira.assignIssuesToRelease();
+            break;
+        default:
+            core.setFailed('Unknown operation type');
+    }
 }
 run();
 

@@ -21,6 +21,9 @@ inputs:
   github_ref:
     description: 'Github branch reference'
     required: true
+  type:
+    description: 'Type operation'
+    required: true
 runs:
   using: 'node20'
   main: 'dist/index.js'

@@ -35,6 +35,7 @@ jobs:
           environment: ${{ vars.ENVIRONMENT }}
           jira_id_awaiting_to_testing: ${{ vars.JIRA_ID_AWAITING_TO_TESTING }}
           github_ref: ${{ env.RELEASE_VERSION }}
+          type: 'createRelease'
 
   rollback_release:
     name: Rollback release
