@@ -218,5 +218,5 @@ jobs:
           jira_url: ${{ secrets.JIRA_URL }}
           jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
           environment: ${{ vars.ENVIRONMENT }}
-          version: ${{ env.VER }}
+          commit_message: "${{ github.event.head_commit.message }}"
           type: 'markRelease'

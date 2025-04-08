@@ -20,8 +20,8 @@ inputs:
     description: 'Id of status awaiting to testing'
   github_ref:
     description: 'Github branch reference'
-  version:
-    description: 'Version release'
+  commit_message:
+    description: 'Commit message'
   type:
     description: 'Type operation'
     required: true
