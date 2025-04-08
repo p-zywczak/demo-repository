@@ -11,7 +11,7 @@ permissions: write-all
 
 jobs:
   jira-release1:
-    name: Create release on JIRA -testowanie
+    name: Create release on JIRA
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
     steps:
