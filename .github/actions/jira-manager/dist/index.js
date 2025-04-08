@@ -86158,7 +86158,7 @@ const core = __importStar(__nccwpck_require__(37484));
 const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraReviewStatusUpdater {
-    constructor(email, token, githubToken, url, projectId, environment, requiredLabels) {
+    constructor(email, token, githubToken, url, projectId, environment, requiredLabels, githubRef) {
         this.email = email;
         this.token = token;
         this.githubToken = githubToken;
@@ -86166,6 +86166,7 @@ class JiraReviewStatusUpdater {
         this.projectId = projectId;
         this.environment = environment;
         this.requiredLabels = requiredLabels;
+        this.githubRef = githubRef;
         this.context = github.context;
         this.client = new jira_js_1.Version3Client({
             host: url,
@@ -86177,16 +86178,17 @@ class JiraReviewStatusUpdater {
             }
         });
         this.githubApi = github.getOctokit(githubToken);
+        this.issueNumber = githubRef.split('/').pop();
     }
     async handle() {
         const labels = await this.fetchLabelsOnPR();
         this.requiredLabels.forEach(label => {
             if (!labels.includes(label)) {
                 core.setFailed(`Missing required label '${label}' to perform the status change.`);
-                process.exit(1);
+                //process.exit(1);
             }
         });
-        core.info(`Labels : ${labels}`);
+        core.info(`Labels : ${this.issueNumber}`);
     }
     async fetchLabelsOnPR() {
         var _a;
@@ -86293,7 +86295,7 @@ async function run() {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels);
+            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, githubRef);
             await jiraReview.handle();
             break;
         default:

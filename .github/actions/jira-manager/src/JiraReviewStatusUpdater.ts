@@ -6,6 +6,7 @@ export class JiraReviewStatusUpdater {
     protected client: Version3Client;
     protected githubApi;
     protected context = github.context;
+    protected issueNumber:string;
 
     constructor(
         private readonly email:string,
@@ -15,6 +16,7 @@ export class JiraReviewStatusUpdater {
         private readonly projectId:string,
         private readonly environment:string,
         private readonly requiredLabels:string[],
+        private readonly githubRef:string,
     ) {
         this.client = new Version3Client({
             host: url,
@@ -26,16 +28,18 @@ export class JiraReviewStatusUpdater {
             }
         });
         this.githubApi = github.getOctokit(githubToken);
+        this.issueNumber = githubRef.split('/').pop()!;
     }
     public async handle(){
         const labels = await this.fetchLabelsOnPR();
         this.requiredLabels.forEach( label => {
             if (!labels.includes(label)) {
                 core.setFailed(`Missing required label '${label}' to perform the status change.`);
-                process.exit(1);
+                //process.exit(1);
             }
         });
-        core.info(`Labels : ${labels}`);
+
+        core.info(`Labels : ${this.issueNumber}`);
     }
     private async fetchLabelsOnPR(): Promise<any>
     {
