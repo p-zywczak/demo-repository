@@ -177,17 +177,6 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Jira Manager - mark release
-        uses: ./.github/actions/release-branch-synchronizer
-        with:
-          jira_email: ${{ secrets.JIRA_EMAIL }}
-          jira_token: ${{ secrets.JIRA_TOKEN }}
-          jira_url: ${{ secrets.JIRA_URL }}
-          jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
-          environment: ${{ vars.ENVIRONMENT }}
-          version: ${{ env.VER }}
-          type: 'markRelease'
-
       - name: Hotfix merge to develop
         if: contains(github.event.head_commit.message, 'hotfix/')
         run: |
@@ -199,3 +188,19 @@ jobs:
           git pull origin develop
           git merge origin/hotfix/${VER} --no-ff -m "Merge hotfix branch into develop: ${{ env.VER }}"
           git push origin develop
+
+  jira-release:
+    name: Mark Release as Released in JIRA
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'release/') || contains(github.event.head_commit.message, 'hotfix/')
+    steps:
+      - name: Jira Manager - mark release
+        uses: ./.github/actions/release-branch-synchronizer
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
+          environment: ${{ vars.ENVIRONMENT }}
+          version: ${{ env.VER }}
+          type: 'markRelease'
