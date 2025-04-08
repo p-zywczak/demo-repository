@@ -15,6 +15,7 @@ async function run(): Promise<void> {
     const idCodeReviewDone:string = core.getInput('jira_id_code_review_done');
     const githubRef:string = core.getInput('github_ref');
     const commitMessage:string = core.getInput('commit_message');
+    const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
     const type:string = core.getInput('type') as OperationTypeEnum;
 
     core.info(`GithubREF: ${githubRef}`);
@@ -32,7 +33,7 @@ async function run(): Promise<void> {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment);
+            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels);
             await jiraReview.handle();
             break;
         default:

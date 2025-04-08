@@ -86158,13 +86158,14 @@ const core = __importStar(__nccwpck_require__(37484));
 const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraReviewStatusUpdater {
-    constructor(email, token, githubToken, url, projectId, environment) {
+    constructor(email, token, githubToken, url, projectId, environment, requiredLabels) {
         this.email = email;
         this.token = token;
         this.githubToken = githubToken;
         this.url = url;
         this.projectId = projectId;
         this.environment = environment;
+        this.requiredLabels = requiredLabels;
         this.context = github.context;
         this.client = new jira_js_1.Version3Client({
             host: url,
@@ -86178,7 +86179,13 @@ class JiraReviewStatusUpdater {
         this.githubApi = github.getOctokit(githubToken);
     }
     async handle() {
-        const labels = this.fetchLabelsOnPR();
+        const labels = await this.fetchLabelsOnPR();
+        this.requiredLabels.forEach(label => {
+            if (!labels.includes(label)) {
+                core.setFailed(`Missing required label '${label}' to perform the status change.`);
+                process.exit(1);
+            }
+        });
         core.info(`Labels : ${labels}`);
     }
     async fetchLabelsOnPR() {
@@ -86270,6 +86277,7 @@ async function run() {
     const idCodeReviewDone = core.getInput('jira_id_code_review_done');
     const githubRef = core.getInput('github_ref');
     const commitMessage = core.getInput('commit_message');
+    const requiredLabels = JSON.parse(core.getInput('required_labels'));
     const type = core.getInput('type');
     core.info(`GithubREF: ${githubRef}`);
     switch (type) {
@@ -86285,7 +86293,7 @@ async function run() {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment);
+            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels);
             await jiraReview.handle();
             break;
         default:

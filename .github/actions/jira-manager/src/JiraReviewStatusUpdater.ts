@@ -14,6 +14,7 @@ export class JiraReviewStatusUpdater {
         private readonly url:string,
         private readonly projectId:string,
         private readonly environment:string,
+        private readonly requiredLabels:string[],
     ) {
         this.client = new Version3Client({
             host: url,
@@ -27,7 +28,13 @@ export class JiraReviewStatusUpdater {
         this.githubApi = github.getOctokit(githubToken);
     }
     public async handle(){
-        const labels = this.fetchLabelsOnPR();
+        const labels = await this.fetchLabelsOnPR();
+        this.requiredLabels.forEach( label => {
+            if (!labels.includes(label)) {
+                core.setFailed(`Missing required label '${label}' to perform the status change.`);
+                process.exit(1);
+            }
+        });
         core.info(`Labels : ${labels}`);
     }
     private async fetchLabelsOnPR(): Promise<any>

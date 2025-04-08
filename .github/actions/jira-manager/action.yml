@@ -26,6 +26,8 @@ inputs:
     description: 'Commit message'
   github_token:
     description: 'Github token (GITHUB_TOKEN)'
+  required_labels:
+    description: 'Required labels to transaction'
   type:
     description: 'Type operation'
     required: true
