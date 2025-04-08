@@ -7,6 +7,7 @@ export class JiraReviewStatusUpdater {
     protected githubApi;
     protected context = github.context;
     protected issueNumber:string;
+    protected sourceBranch:string = github.context.payload.pull_request?.head?.ref;
 
     constructor(
         private readonly email:string,
@@ -39,7 +40,7 @@ export class JiraReviewStatusUpdater {
             }
         });
 
-        core.info(`Labels : ${this.issueNumber}`);
+        core.info(`Labels : ${this.sourceBranch}`);
     }
     private async fetchLabelsOnPR(): Promise<any>
     {

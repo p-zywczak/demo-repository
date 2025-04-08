@@ -86159,6 +86159,7 @@ const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraReviewStatusUpdater {
     constructor(email, token, githubToken, url, projectId, environment, requiredLabels, githubRef) {
+        var _a, _b;
         this.email = email;
         this.token = token;
         this.githubToken = githubToken;
@@ -86168,6 +86169,7 @@ class JiraReviewStatusUpdater {
         this.requiredLabels = requiredLabels;
         this.githubRef = githubRef;
         this.context = github.context;
+        this.sourceBranch = (_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref;
         this.client = new jira_js_1.Version3Client({
             host: url,
             authentication: {
@@ -86188,7 +86190,7 @@ class JiraReviewStatusUpdater {
                 //process.exit(1);
             }
         });
-        core.info(`Labels : ${this.issueNumber}`);
+        core.info(`Labels : ${this.sourceBranch}`);
     }
     async fetchLabelsOnPR() {
         var _a;
