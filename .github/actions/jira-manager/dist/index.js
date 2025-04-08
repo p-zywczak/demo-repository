@@ -86158,7 +86158,7 @@ const core = __importStar(__nccwpck_require__(37484));
 const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraReviewStatusUpdater {
-    constructor(email, token, githubToken, url, projectId, environment, requiredLabels, idCodeReviewDone) {
+    constructor(email, token, githubToken, url, projectId, environment, requiredLabels, idCodeReviewDone, idCodeReview) {
         var _a, _b;
         this.email = email;
         this.token = token;
@@ -86168,6 +86168,7 @@ class JiraReviewStatusUpdater {
         this.environment = environment;
         this.requiredLabels = requiredLabels;
         this.idCodeReviewDone = idCodeReviewDone;
+        this.idCodeReview = idCodeReview;
         this.context = github.context;
         this.issueKey = (((_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref.match(/([A-Za-z]+-\d+)/)) || [])[1];
         this.client = new jira_js_1.Version3Client({
@@ -86181,16 +86182,27 @@ class JiraReviewStatusUpdater {
         });
         this.githubApi = github.getOctokit(githubToken);
     }
-    async handle() {
+    async processReviewStatus() {
         const labels = await this.fetchLabelsOnPR();
-        this.requiredLabels.forEach(label => {
+        const missingLabels = this.requiredLabels.filter(label => !labels.includes(label));
+        if (missingLabels.length > 0) {
+            core.setFailed(`Missing required label(s): ${missingLabels.join(', ')}.`);
+            await this.updateTaskStatus(this.idCodeReview);
+        }
+        else {
+            await this.updateTaskStatus(this.idCodeReviewDone);
+        }
+        /*
+        this.requiredLabels.forEach( label => {
             if (!labels.includes(label)) {
                 core.setFailed(`Missing required label '${label}' to perform the status change.`);
-                //process.exit(1);
+                process.exit(1);
             }
         });
-        await this.updateTaskStatus(this.issueKey);
+         */
         core.info(`Labels : ${this.issueKey}`);
+    }
+    async processReviewStatusRollback() {
     }
     async fetchLabelsOnPR() {
         var _a;
@@ -86203,10 +86215,10 @@ class JiraReviewStatusUpdater {
         });
         return data.map(label => label.name);
     }
-    async updateTaskStatus(key) {
+    async updateTaskStatus(id) {
         await this.client.issues.doTransition({
-            issueIdOrKey: key,
-            transition: { id: this.idCodeReviewDone }
+            issueIdOrKey: this.issueKey,
+            transition: { id: id }
         });
         core.info('Successful - updated transaction');
     }
@@ -86286,6 +86298,7 @@ async function run() {
     const environment = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
     const idCodeReviewDone = core.getInput('jira_id_code_review_done');
+    const idCodeReview = core.getInput('jira_id_code_review');
     const githubRef = core.getInput('github_ref');
     const commitMessage = core.getInput('commit_message');
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
@@ -86304,8 +86317,8 @@ async function run() {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone);
-            await jiraReview.handle();
+            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone, idCodeReview);
+            await jiraReview.processReviewStatus();
             break;
         default:
             core.setFailed('Unknown operation type');

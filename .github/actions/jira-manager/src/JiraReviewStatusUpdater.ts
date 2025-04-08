@@ -17,6 +17,7 @@ export class JiraReviewStatusUpdater {
         private readonly environment:string,
         private readonly requiredLabels:string[],
         private readonly idCodeReviewDone:string,
+        private readonly idCodeReview:string,
     ) {
         this.client = new Version3Client({
             host: url,
@@ -29,16 +30,29 @@ export class JiraReviewStatusUpdater {
         });
         this.githubApi = github.getOctokit(githubToken);
     }
-    public async handle(){
+    public async processReviewStatus(){
         const labels = await this.fetchLabelsOnPR();
+        const missingLabels:string[] = this.requiredLabels.filter(label => !labels.includes(label));
+        if ( missingLabels.length > 0 ) {
+            core.setFailed(`Missing required label(s): ${missingLabels.join(', ')}.`);
+            await this.updateTaskStatus(this.idCodeReview);
+        } else {
+            await this.updateTaskStatus(this.idCodeReviewDone);
+        }
+
+        /*
         this.requiredLabels.forEach( label => {
             if (!labels.includes(label)) {
                 core.setFailed(`Missing required label '${label}' to perform the status change.`);
-                //process.exit(1);
+                process.exit(1);
             }
         });
-        await this.updateTaskStatus(this.issueKey);
+         */
+
         core.info(`Labels : ${this.issueKey}`);
+    }
+    public async processReviewStatusRollback(){
+
     }
     private async fetchLabelsOnPR(): Promise<any>
     {
@@ -51,10 +65,10 @@ export class JiraReviewStatusUpdater {
         });
         return data.map(label => label.name);
     }
-    public async updateTaskStatus(key:string):Promise<void> {
+    public async updateTaskStatus(id:string):Promise<void> {
         await this.client.issues.doTransition({
-            issueIdOrKey: key,
-            transition: { id: this.idCodeReviewDone}
+            issueIdOrKey: this.issueKey,
+            transition: { id: id}
         });
         core.info('Successful - updated transaction');
     }

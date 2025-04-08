@@ -13,6 +13,7 @@ async function run(): Promise<void> {
     const environment:string = core.getInput('environment');
     const idAwaitingToTesting:string = core.getInput('jira_id_awaiting_to_testing');
     const idCodeReviewDone:string = core.getInput('jira_id_code_review_done');
+    const idCodeReview:string = core.getInput('jira_id_code_review');
     const githubRef:string = core.getInput('github_ref');
     const commitMessage:string = core.getInput('commit_message');
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
@@ -33,8 +34,10 @@ async function run(): Promise<void> {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone);
-            await jiraReview.handle();
+            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(
+                email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone, idCodeReview
+            );
+            await jiraReview.processReviewStatus();
             break;
         default:
             core.setFailed('Unknown operation type');

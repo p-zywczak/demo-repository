@@ -20,6 +20,8 @@ inputs:
     description: 'Id of status awaiting to testing'
   jira_id_code_review_done:
     description: 'id of status code_review_done'
+  jira_id_code_review:
+    description: 'id of status code_review'
   github_ref:
     description: 'Github branch reference'
   commit_message:
