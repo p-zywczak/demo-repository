@@ -27,7 +27,7 @@ export class JiraMarkRelease
         const releaseName:string = `[${this.environment}] v${this.version}`;
         const targetRelease = releases.find((release: any) => release.name === releaseName);
         if(!targetRelease) {
-            core.info(`Not found release: ${releaseName} in jira  `)
+            core.error(`Not found release: ${releaseName} in jira  `)
         } else {
             await this.markRelease(targetRelease.id);
         }

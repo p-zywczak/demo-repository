@@ -200,6 +200,16 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Extract Version from Commit Message
+        id: extract_version
+        run: |
+          VERSION=$(git log -1 --pretty=%B | grep -oP '(release|hotfix)/\K[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n 1 | tr -d '[:space:]')
+          if [ -z "$VERSION" ]; then
+          echo "Version not found in commit message."
+          exit 1
+          fi
+          echo "VER=$VERSION" >> $GITHUB_ENV
+
       - name: Jira Manager - mark release
         uses: ./.github/actions/jira-manager
         with:
