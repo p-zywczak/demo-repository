@@ -201,7 +201,7 @@ jobs:
           fetch-depth: 0
 
       - name: Jira Manager - mark release
-        uses: ./.github/actions/release-branch-synchronizer
+        uses: ./.github/actions/jira-manager
         with:
           jira_email: ${{ secrets.JIRA_EMAIL }}
           jira_token: ${{ secrets.JIRA_TOKEN }}
