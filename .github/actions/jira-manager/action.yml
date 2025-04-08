@@ -18,10 +18,14 @@ inputs:
     required: true
   jira_id_awaiting_to_testing:
     description: 'Id of status awaiting to testing'
+  jira_id_code_review_done:
+    description: 'id of status code_review_done'
   github_ref:
     description: 'Github branch reference'
   commit_message:
     description: 'Commit message'
+  github_token:
+    description: 'Github token (GITHUB_TOKEN)'
   type:
     description: 'Type operation'
     required: true

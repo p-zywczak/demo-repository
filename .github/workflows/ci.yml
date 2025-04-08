@@ -12,6 +12,24 @@ on:
 permissions: write-all
   
 jobs:
+  jira_review_status_updater:
+    name: 'Change jira task status after CR done'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Jira manager - review status updater
+        uses: ./.github/actions/jira-manager
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
+          jira_id_code_review_done: ${{ vars.JIRA_ID_CODE_REVIEW_DONE }}
+          github_ref: ${{ github.ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          type: 'reviewStatusUpdater'
+
   ci_cd:
     runs-on: ubuntu-latest
     if: >

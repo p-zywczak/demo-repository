@@ -18,13 +18,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Extract Release Version
-        id: extract_version
-        run: |
-          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
-        env:
-          GITHUB_REF: ${{ github.ref }}
-
       - name: Jira manager - create release
         uses: ./.github/actions/jira-manager
         with:
