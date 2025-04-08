@@ -86158,7 +86158,7 @@ const core = __importStar(__nccwpck_require__(37484));
 const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraReviewStatusUpdater {
-    constructor(email, token, githubToken, url, projectId, environment, requiredLabels, githubRef) {
+    constructor(email, token, githubToken, url, projectId, environment, requiredLabels) {
         var _a, _b;
         this.email = email;
         this.token = token;
@@ -86167,9 +86167,8 @@ class JiraReviewStatusUpdater {
         this.projectId = projectId;
         this.environment = environment;
         this.requiredLabels = requiredLabels;
-        this.githubRef = githubRef;
         this.context = github.context;
-        this.sourceBranch = (_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref;
+        this.sourceBranch = (_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref.match(/([A-Za-z]+-\d+)/);
         this.client = new jira_js_1.Version3Client({
             host: url,
             authentication: {
@@ -86180,7 +86179,6 @@ class JiraReviewStatusUpdater {
             }
         });
         this.githubApi = github.getOctokit(githubToken);
-        this.issueNumber = githubRef.split('/').pop();
     }
     async handle() {
         const labels = await this.fetchLabelsOnPR();
@@ -86297,7 +86295,7 @@ async function run() {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, githubRef);
+            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels);
             await jiraReview.handle();
             break;
         default:

@@ -6,8 +6,7 @@ export class JiraReviewStatusUpdater {
     protected client: Version3Client;
     protected githubApi;
     protected context = github.context;
-    protected issueNumber:string;
-    protected sourceBranch:string = github.context.payload.pull_request?.head?.ref;
+    protected sourceBranch:string = github.context.payload.pull_request?.head?.ref.match(/([A-Za-z]+-\d+)/);
 
     constructor(
         private readonly email:string,
@@ -17,7 +16,6 @@ export class JiraReviewStatusUpdater {
         private readonly projectId:string,
         private readonly environment:string,
         private readonly requiredLabels:string[],
-        private readonly githubRef:string,
     ) {
         this.client = new Version3Client({
             host: url,
@@ -29,7 +27,6 @@ export class JiraReviewStatusUpdater {
             }
         });
         this.githubApi = github.getOctokit(githubToken);
-        this.issueNumber = githubRef.split('/').pop()!;
     }
     public async handle(){
         const labels = await this.fetchLabelsOnPR();
