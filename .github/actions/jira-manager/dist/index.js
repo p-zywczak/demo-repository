@@ -81791,13 +81791,13 @@ exports.JiraMarkRelease = void 0;
 const core = __importStar(__nccwpck_require__(37484));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraMarkRelease {
-    constructor(email, token, url, projectId, environment, version) {
+    constructor(email, token, url, projectId, environment, commitMessage) {
         this.email = email;
         this.token = token;
         this.url = url;
         this.projectId = projectId;
         this.environment = environment;
-        this.version = version;
+        this.commitMessage = commitMessage;
         this.client = new jira_js_1.Version3Client({
             host: url,
             authentication: {
@@ -81807,6 +81807,12 @@ class JiraMarkRelease {
                 }
             }
         });
+        const versionRegex = /(release|hotfix)\/(\d+\.\d+\.\d+(?:\.\d+)?)/i;
+        const match = commitMessage.match(versionRegex);
+        if (!match) {
+            core.error('Not found version in commit message');
+        }
+        this.version = match[2];
     }
     async releaseVersion() {
         const releases = await this.fetchAllReleases();
@@ -81905,6 +81911,7 @@ async function run() {
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
     const githubRef = core.getInput('github_ref');
     const version = core.getInput('version');
+    const commitMessage = core.getInput('commit_message');
     const type = core.getInput('type');
     const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
     switch (type) {
@@ -81915,7 +81922,7 @@ async function run() {
             await jira.assignIssuesToRelease();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.MarkRelease):
-            const jiraMark = new JiraMarkRelease_1.JiraMarkRelease(email, token, url, projectId, environment, version);
+            const jiraMark = new JiraMarkRelease_1.JiraMarkRelease(email, token, url, projectId, environment, commitMessage);
             await jiraMark.releaseVersion();
             break;
         default:

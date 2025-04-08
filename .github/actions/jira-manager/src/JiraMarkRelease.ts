@@ -4,13 +4,14 @@ import { Version3Client } from 'jira.js'
 export class JiraMarkRelease
 {
     protected client:Version3Client;
+    private version: string;
     constructor(
         private readonly email:string,
         private readonly token:string,
         private readonly url:string,
         private readonly projectId:string,
         private readonly environment:string,
-        private readonly version:string
+        private readonly commitMessage:string
     ) {
         this.client = new Version3Client({
             host: url,
@@ -21,6 +22,12 @@ export class JiraMarkRelease
                 }
             }
         });
+        const versionRegex:RegExp = /(release|hotfix)\/(\d+\.\d+\.\d+(?:\.\d+)?)/i;
+        const match:RegExpMatchArray | null = commitMessage.match(versionRegex);
+        if (!match) {
+            core.error('Not found version in commit message');
+        }
+        this.version = match![2];
     }
     public async releaseVersion():Promise<void> {
         const releases = await this.fetchAllReleases();
