@@ -1,0 +1,30 @@
+name: 'Jira Release'
+description: 'Jira release and assign tasks'
+inputs:
+  jira_email:
+    description: 'Jira email'
+    required: true
+  jira_token:
+    description: 'Jira API token for authentication'
+    required: true
+  jira_url:
+    description: 'Jira URL'
+    required: true
+  jira_project_id:
+    description: 'Jira project ID'
+    required: true
+  environment:
+    description: 'Label on task - backend/fronted'
+    required: true
+  jira_id_awaiting_to_testing:
+    description: 'Id of status awaiting to testing'
+  github_ref:
+    description: 'Github branch reference'
+  version:
+    description: 'Version release'
+  type:
+    description: 'Type operation'
+    required: true
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
