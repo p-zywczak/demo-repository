@@ -6,7 +6,7 @@ export class JiraReviewStatusUpdater {
     protected client: Version3Client;
     protected githubApi;
     protected context = github.context;
-    protected sourceBranch:string = github.context.payload.pull_request?.head?.ref.match(/([A-Za-z]+-\d+)/);
+    protected issueKey:string = (github.context.payload.pull_request?.head?.ref.match(/([A-Za-z]+-\d+)/) || [])[1];
 
     constructor(
         private readonly email:string,
@@ -16,6 +16,7 @@ export class JiraReviewStatusUpdater {
         private readonly projectId:string,
         private readonly environment:string,
         private readonly requiredLabels:string[],
+        private readonly idCodeReviewDone:string,
     ) {
         this.client = new Version3Client({
             host: url,
@@ -36,8 +37,8 @@ export class JiraReviewStatusUpdater {
                 //process.exit(1);
             }
         });
-
-        core.info(`Labels : ${this.sourceBranch}`);
+        await this.updateTaskStatus(this.issueKey);
+        core.info(`Labels : ${this.issueKey}`);
     }
     private async fetchLabelsOnPR(): Promise<any>
     {
@@ -49,5 +50,12 @@ export class JiraReviewStatusUpdater {
             issue_number: prNumber,
         });
         return data.map(label => label.name);
+    }
+    public async updateTaskStatus(key:string):Promise<void> {
+        await this.client.issues.doTransition({
+            issueIdOrKey: key,
+            transition: { id: this.idCodeReviewDone}
+        });
+        core.info('Successful - updated transaction');
     }
 }

@@ -33,7 +33,7 @@ async function run(): Promise<void> {
             await jiraMark.releaseVersion();
             break;
         case (OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels);
+            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone);
             await jiraReview.handle();
             break;
         default:
