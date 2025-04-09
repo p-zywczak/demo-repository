@@ -23,7 +23,7 @@ export class JiraReviewStatusUpdater {
     }
     public async processCodeReviewStatus(){
         const labels = await this.fetchLabelsOnPR();
-        const missingLabels:string[] = this.options.requiredLabels.filter(label => !labels.includes(label));
+        const missingLabels:string[] = this.options.requiredLabels!.filter(label => !labels.includes(label));
         if ( missingLabels.length > 0 ) {
             core.setFailed(`Missing required label(s): ${missingLabels.join(', ')}.`);
             await this.updateTaskStatus(this.options.idCodeReview!);
@@ -32,7 +32,7 @@ export class JiraReviewStatusUpdater {
         }
     }
     public async processAwaitingToReleaseStatus(){
-
+        await this.updateTaskStatus(this.options.idAwaitingToRelease!);
     }
     private async fetchLabelsOnPR(): Promise<any>
     {

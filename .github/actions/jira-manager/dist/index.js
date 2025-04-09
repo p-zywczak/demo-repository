@@ -86186,6 +86186,7 @@ class JiraReviewStatusUpdater {
         }
     }
     async processAwaitingToReleaseStatus() {
+        await this.updateTaskStatus(this.options.idAwaitingToRelease);
     }
     async fetchLabelsOnPR() {
         var _a;
@@ -86319,7 +86320,6 @@ async function run() {
                 token,
                 githubToken,
                 url,
-                requiredLabels,
                 idAwaitingToRelease
             };
             const jiraReviewRelease = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(optionsAwaiting);

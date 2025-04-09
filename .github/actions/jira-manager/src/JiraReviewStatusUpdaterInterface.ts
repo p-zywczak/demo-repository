@@ -3,7 +3,7 @@ export interface JiraReviewStatusUpdaterInterface {
     token: string;
     githubToken: string;
     url: string;
-    requiredLabels: string[];
+    requiredLabels?: string[];
     idCodeReviewDone?: string;
     idCodeReview?: string;
     idAwaitingToRelease?: string;

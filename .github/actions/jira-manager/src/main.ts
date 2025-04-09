@@ -52,7 +52,6 @@ async function run(): Promise<void> {
                 token,
                 githubToken,
                 url,
-                requiredLabels,
                 idAwaitingToRelease
             };
             const jiraReviewRelease:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(optionsAwaiting);
