@@ -51,53 +51,13 @@ jobs:
             php artisan migrate
             php artisan config:clear
 
-  ci_cd:
+  notification:
+    name: 'Notification teams'
+    if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
     runs-on: ubuntu-latest
-    if: >
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.base.ref == 'develop' &&
-        github.event.pull_request.head.ref != 'main')
-      ||
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.base.ref == 'main' &&
-        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
-      ||
-      (github.event_name == 'pull_request' &&
-        startsWith(github.event.pull_request.base.ref, 'release/'))
-      ||
-      (github.event_name == 'issue_comment' &&
-        github.event.comment.body == '/ping' &&
-        github.event.issue.pull_request)
-        
     steps:
-      - uses: actions/checkout@v2
-            
-      - name: Manger Labels
-        uses: ./.github/actions/manager-labels
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          required_labels: '["CR1", "APPROVAL"]'
-          skip_labels_check: '["DO MERGE"]'
-
-
-      - name: Assign PR creator
-        if: github.event_name == 'pull_request' && github.event.action == 'opened'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const prCreator = context.payload.pull_request.user.login;
-            
-            await github.rest.issues.addAssignees({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              assignees: [prCreator]
-            });
-      
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
-        if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
         with:
           webhook_url: ${{ secrets.MSTEAMS_WEBHOOK_PR }}
           raw: >-
@@ -166,52 +126,46 @@ jobs:
                 ]
             }
 
-      - name: Remove labels, approve CR1 and CR2
-        if: github.event_name == 'pull_request' && (github.event.action != 'labeled' && github.event.action != 'unlabeled')
+  quality_checks:
+    name: 'Quality checks'
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.base.ref == 'develop' &&
+        github.event.pull_request.head.ref != 'main')
+      ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.base.ref == 'main' &&
+        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+      ||
+      (github.event_name == 'pull_request' &&
+        startsWith(github.event.pull_request.base.ref, 'release/'))
+        
+    steps:
+      - uses: actions/checkout@v2
+            
+      - name: Manger Labels
+        uses: ./.github/actions/manager-labels
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          required_labels: '["CR1", "APPROVAL"]'
+          skip_labels_check: '["DO MERGE"]'
+
+
+      - name: Assign PR creator
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
         uses: actions/github-script@v6
         with:
           script: |
-            const issue_number = context.payload.pull_request.number;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
+            const prNumber = context.payload.pull_request.number;
+            const prCreator = context.payload.pull_request.user.login;
             
-            const labelsToRemove = ['CR1', 'CR2', 'APPROVAL'];
-            
-            for (const label of labelsToRemove) {
-              try {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issue_number,
-                  name: label
-                });
-              } catch (error) {
-              }
-            }
-            
-            try {
-              const reviewsResponse = await github.rest.pulls.listReviews({
-                owner,
-                repo,
-                pull_number: issue_number,
-              });
-
-              const reviews = reviewsResponse.data;
-
-              for (const review of reviews) {
-                if (review.state === 'APPROVED') {
-                  await github.rest.pulls.dismissReview({
-                    owner,
-                    repo,
-                    pull_number: issue_number,
-                    review_id: review.id,
-                    message: 'Automatyczne cofnięcie zatwierdzenia.'
-                  });
-                }
-              }
-            } catch (error) {
-              console.error('Błąd podczas cofania recenzji:', error);
-            }
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              assignees: [prCreator]
+            });
 
       - name: Checkout repository
         if: github.event_name == 'pull_request'
