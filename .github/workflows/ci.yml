@@ -14,7 +14,7 @@ permissions: write-all
 jobs:
   jira_review_status_updater:
     name: 'Change jira task status after CR done'
-    if: github.event_name == 'pull_request' && (github.event.action != 'labeled' && github.event.action != 'unlabeled')
+    if: github.event_name == 'pull_request' && (github.event.action == 'labeled' && github.event.action == 'unlabeled')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
