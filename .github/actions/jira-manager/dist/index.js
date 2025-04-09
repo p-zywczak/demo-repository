@@ -86204,7 +86204,7 @@ class JiraStatusUpdater {
     }
     async updateTaskStatus(id) {
         core.info(`KEY: ${this.issueKey} ID: ${id}`);
-        core.info(`GITHUB: ${JSON.stringify(github.context, null, 2)}`);
+        core.info(`BRANCH_NAMEREF: ${this.options.githubRef}`);
         await this.client.issues.doTransition({
             issueIdOrKey: this.issueKey,
             transition: { id: id }
@@ -86337,7 +86337,8 @@ async function run() {
                 token,
                 githubToken,
                 url,
-                idCodeReview
+                idCodeReview,
+                githubRef
             };
             const jiraCodeReview = new JiraStatusUpdater_1.JiraStatusUpdater(optionsCodeReview);
             await jiraCodeReview.processCodeReviewStatus();

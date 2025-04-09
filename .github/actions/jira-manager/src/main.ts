@@ -63,7 +63,8 @@ async function run(): Promise<void> {
                 token,
                 githubToken,
                 url,
-                idCodeReview
+                idCodeReview,
+                githubRef
             };
             const jiraCodeReview:JiraStatusUpdater = new JiraStatusUpdater(optionsCodeReview);
             await jiraCodeReview.processCodeReviewStatus();

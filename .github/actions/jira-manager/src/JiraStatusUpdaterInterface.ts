@@ -7,4 +7,5 @@ export interface JiraStatusUpdaterInterface {
     idCodeReviewDone?: string;
     idCodeReview?: string;
     idAwaitingToRelease?: string;
+    githubRef?: string;
 }
