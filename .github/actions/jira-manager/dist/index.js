@@ -86204,6 +86204,7 @@ class JiraStatusUpdater {
     }
     async updateTaskStatus(id) {
         core.info(`KEY: ${this.issueKey} ID: ${id}`);
+        core.info(`GITHUB: ${JSON.stringify(github.context.payload.pull_request, null, 2)}`);
         await this.client.issues.doTransition({
             issueIdOrKey: this.issueKey,
             transition: { id: id }
