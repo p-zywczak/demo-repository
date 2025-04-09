@@ -86291,7 +86291,7 @@ async function run() {
     const idCodeReview = core.getInput('jira_id_code_review');
     const githubRef = core.getInput('github_ref');
     const commitMessage = core.getInput('commit_message');
-    const requiredLabels = JSON.parse(core.getInput('required_labels'));
+    const requiredLabels = JSON.parse(core.getInput('required_labels') || '[]');
     const type = core.getInput('type');
     switch (type) {
         case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):

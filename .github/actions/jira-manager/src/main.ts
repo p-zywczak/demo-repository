@@ -18,7 +18,7 @@ async function run(): Promise<void> {
     const idCodeReview:string = core.getInput('jira_id_code_review');
     const githubRef:string = core.getInput('github_ref');
     const commitMessage:string = core.getInput('commit_message');
-    const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
+    const requiredLabels:string[] = JSON.parse(core.getInput('required_labels') || '[]') as string[];
     const type:string = core.getInput('type') as OperationTypeEnum;
 
     switch (type) {
