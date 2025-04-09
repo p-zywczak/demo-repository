@@ -86203,6 +86203,7 @@ class JiraStatusUpdater {
         return data.map(label => label.name);
     }
     async updateTaskStatus(id) {
+        core.info(`KEY: ${this.issueKey} ID: ${id}`);
         await this.client.issues.doTransition({
             issueIdOrKey: this.issueKey,
             transition: { id: id }

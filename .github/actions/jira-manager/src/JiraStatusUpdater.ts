@@ -49,6 +49,7 @@ export class JiraStatusUpdater {
         return data.map(label => label.name);
     }
     public async updateTaskStatus(id:string):Promise<void> {
+        core.info(`KEY: ${this.issueKey} ID: ${id}`);
         await this.client.issues.doTransition({
             issueIdOrKey: this.issueKey,
             transition: { id: id}
