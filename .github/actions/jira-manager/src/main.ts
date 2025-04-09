@@ -3,23 +3,23 @@ import {JiraCreateRelease} from "./JiraCreateRelease";
 import {OperationTypeEnum} from "./OperationTypeEnum";
 import {JiraMarkRelease} from "./JiraMarkRelease";
 import {JiraReviewStatusUpdater} from "./JiraReviewStatusUpdater";
+import {JiraReviewStatusUpdaterInterface} from "./JiraReviewStatusUpdaterInterface";
 
 async function run(): Promise<void> {
     const email:string = core.getInput('jira_email');
     const token:string = core.getInput('jira_token');
-    const github_token:string = core.getInput('github_token');
+    const githubToken:string = core.getInput('github_token');
     const url:string = core.getInput('jira_url');
     const projectId:string = core.getInput('jira_project_id');
     const environment:string = core.getInput('environment');
     const idAwaitingToTesting:string = core.getInput('jira_id_awaiting_to_testing');
     const idCodeReviewDone:string = core.getInput('jira_id_code_review_done');
+    const idAwaitingToRelease:string = core.getInput('jira_id_awaiting_to_release');
     const idCodeReview:string = core.getInput('jira_id_code_review');
     const githubRef:string = core.getInput('github_ref');
     const commitMessage:string = core.getInput('commit_message');
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
     const type:string = core.getInput('type') as OperationTypeEnum;
-
-    core.info(`GithubREF: ${githubRef}`);
 
     switch (type) {
         case (OperationTypeEnum.CreateRelease):
@@ -33,11 +33,30 @@ async function run(): Promise<void> {
             const jiraMark:JiraMarkRelease = new JiraMarkRelease(email, token, url, projectId, environment, commitMessage);
             await jiraMark.releaseVersion();
             break;
-        case (OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(
-                email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone, idCodeReview
-            );
-            await jiraReview.processReviewStatus();
+        case (OperationTypeEnum.CodeReviewStatusUpdater):
+            const optionsCodeReview: JiraReviewStatusUpdaterInterface = {
+                email,
+                token,
+                githubToken,
+                url,
+                requiredLabels,
+                idCodeReviewDone,
+                idCodeReview
+            };
+            const jiraReview:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(optionsCodeReview);
+            await jiraReview.processCodeReviewStatus();
+            break;
+        case (OperationTypeEnum.AwaitingToReleaseStatusUpdater):
+            const optionsAwaiting: JiraReviewStatusUpdaterInterface = {
+                email,
+                token,
+                githubToken,
+                url,
+                requiredLabels,
+                idAwaitingToRelease
+            };
+            const jiraReviewRelease:JiraReviewStatusUpdater = new JiraReviewStatusUpdater(optionsAwaiting);
+            await jiraReviewRelease.processAwaitingToReleaseStatus();
             break;
         default:
             core.setFailed('Unknown operation type');

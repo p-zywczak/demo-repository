@@ -86158,51 +86158,34 @@ const core = __importStar(__nccwpck_require__(37484));
 const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraReviewStatusUpdater {
-    constructor(email, token, githubToken, url, projectId, environment, requiredLabels, idCodeReviewDone, idCodeReview) {
+    constructor(options) {
         var _a, _b;
-        this.email = email;
-        this.token = token;
-        this.githubToken = githubToken;
-        this.url = url;
-        this.projectId = projectId;
-        this.environment = environment;
-        this.requiredLabels = requiredLabels;
-        this.idCodeReviewDone = idCodeReviewDone;
-        this.idCodeReview = idCodeReview;
+        this.options = options;
         this.context = github.context;
         this.issueKey = (((_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref.match(/([A-Za-z]+-\d+)/)) || [])[1];
         this.client = new jira_js_1.Version3Client({
-            host: url,
+            host: options.url,
             authentication: {
                 basic: {
-                    email: email,
-                    apiToken: token,
+                    email: options.email,
+                    apiToken: options.token,
                 }
             }
         });
-        this.githubApi = github.getOctokit(githubToken);
+        this.githubApi = github.getOctokit(options.githubToken);
     }
-    async processReviewStatus() {
+    async processCodeReviewStatus() {
         const labels = await this.fetchLabelsOnPR();
-        const missingLabels = this.requiredLabels.filter(label => !labels.includes(label));
+        const missingLabels = this.options.requiredLabels.filter(label => !labels.includes(label));
         if (missingLabels.length > 0) {
             core.setFailed(`Missing required label(s): ${missingLabels.join(', ')}.`);
-            await this.updateTaskStatus(this.idCodeReview);
+            await this.updateTaskStatus(this.options.idCodeReview);
         }
         else {
-            await this.updateTaskStatus(this.idCodeReviewDone);
+            await this.updateTaskStatus(this.options.idCodeReviewDone);
         }
-        /*
-        this.requiredLabels.forEach( label => {
-            if (!labels.includes(label)) {
-                core.setFailed(`Missing required label '${label}' to perform the status change.`);
-                process.exit(1);
-            }
-        });
-         */
-        core.info(`Labels : ${this.issueKey}`);
     }
-    async processReviewStatusRollback() {
+    async processAwaitingToReleaseStatus() {
     }
     async fetchLabelsOnPR() {
         var _a;
@@ -86239,7 +86222,8 @@ var OperationTypeEnum;
 (function (OperationTypeEnum) {
     OperationTypeEnum["CreateRelease"] = "createRelease";
     OperationTypeEnum["MarkRelease"] = "markRelease";
-    OperationTypeEnum["ReviewStatusUpdater"] = "reviewStatusUpdater";
+    OperationTypeEnum["CodeReviewStatusUpdater"] = "codeReviewStatusUpdater";
+    OperationTypeEnum["AwaitingToReleaseStatusUpdater"] = "awaitingToReleaseStatusUpdater";
 })(OperationTypeEnum || (exports.OperationTypeEnum = OperationTypeEnum = {}));
 
 
@@ -86292,18 +86276,18 @@ const JiraReviewStatusUpdater_1 = __nccwpck_require__(85456);
 async function run() {
     const email = core.getInput('jira_email');
     const token = core.getInput('jira_token');
-    const github_token = core.getInput('github_token');
+    const githubToken = core.getInput('github_token');
     const url = core.getInput('jira_url');
     const projectId = core.getInput('jira_project_id');
     const environment = core.getInput('environment');
     const idAwaitingToTesting = core.getInput('jira_id_awaiting_to_testing');
     const idCodeReviewDone = core.getInput('jira_id_code_review_done');
+    const idAwaitingToRelease = core.getInput('jira_id_awaiting_to_release');
     const idCodeReview = core.getInput('jira_id_code_review');
     const githubRef = core.getInput('github_ref');
     const commitMessage = core.getInput('commit_message');
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
     const type = core.getInput('type');
-    core.info(`GithubREF: ${githubRef}`);
     switch (type) {
         case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):
             const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
@@ -86316,9 +86300,30 @@ async function run() {
             const jiraMark = new JiraMarkRelease_1.JiraMarkRelease(email, token, url, projectId, environment, commitMessage);
             await jiraMark.releaseVersion();
             break;
-        case (OperationTypeEnum_1.OperationTypeEnum.ReviewStatusUpdater):
-            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(email, token, github_token, url, projectId, environment, requiredLabels, idCodeReviewDone, idCodeReview);
-            await jiraReview.processReviewStatus();
+        case (OperationTypeEnum_1.OperationTypeEnum.CodeReviewStatusUpdater):
+            const optionsCodeReview = {
+                email,
+                token,
+                githubToken,
+                url,
+                requiredLabels,
+                idCodeReviewDone,
+                idCodeReview
+            };
+            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(optionsCodeReview);
+            await jiraReview.processCodeReviewStatus();
+            break;
+        case (OperationTypeEnum_1.OperationTypeEnum.AwaitingToReleaseStatusUpdater):
+            const optionsAwaiting = {
+                email,
+                token,
+                githubToken,
+                url,
+                requiredLabels,
+                idAwaitingToRelease
+            };
+            const jiraReviewRelease = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(optionsAwaiting);
+            await jiraReviewRelease.processAwaitingToReleaseStatus();
             break;
         default:
             core.setFailed('Unknown operation type');
