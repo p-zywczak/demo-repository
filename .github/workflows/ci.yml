@@ -150,7 +150,7 @@ jobs:
           jira_url: ${{ secrets.JIRA_URL }}
           jira_id_code_review: ${{ vars.JIRA_ID_CODE_REVIEW }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_ref: ${{ github.base_ref }}
+          github_ref: ${{ github.ref_name }}
           type: 'codeReviewStatusUpdater'
 
   quality_checks:
