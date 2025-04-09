@@ -1,8 +1,9 @@
-import {JiraReviewStatusUpdater} from "./JiraReviewStatusUpdater";
+import {JiraStatusUpdater} from "./JiraStatusUpdater";
 
 export enum OperationTypeEnum {
     CreateRelease = 'createRelease',
     MarkRelease = 'markRelease',
-    CodeReviewStatusUpdater = 'codeReviewStatusUpdater',
+    CodeReviewDoneStatusUpdater = 'codeReviewDoneStatusUpdater',
     AwaitingToReleaseStatusUpdater = 'awaitingToReleaseStatusUpdater',
+    CodeReviewStatusUpdater = 'codeReviewStatusUpdater',
 }

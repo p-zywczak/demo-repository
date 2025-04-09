@@ -1,4 +1,4 @@
-export interface JiraReviewStatusUpdaterInterface {
+export interface JiraStatusUpdaterInterface {
     email: string;
     token: string;
     githubToken: string;

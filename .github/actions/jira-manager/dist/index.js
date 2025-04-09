@@ -86114,7 +86114,7 @@ exports.JiraMarkRelease = JiraMarkRelease;
 
 /***/ }),
 
-/***/ 85456:
+/***/ 46824:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -86153,11 +86153,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.JiraReviewStatusUpdater = void 0;
+exports.JiraStatusUpdater = void 0;
 const core = __importStar(__nccwpck_require__(37484));
 const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
-class JiraReviewStatusUpdater {
+class JiraStatusUpdater {
     constructor(options) {
         var _a, _b;
         this.options = options;
@@ -86174,7 +86174,7 @@ class JiraReviewStatusUpdater {
         });
         this.githubApi = github.getOctokit(options.githubToken);
     }
-    async processCodeReviewStatus() {
+    async processCodeReviewDoneStatus() {
         const labels = await this.fetchLabelsOnPR();
         const missingLabels = this.options.requiredLabels.filter(label => !labels.includes(label));
         if (missingLabels.length > 0) {
@@ -86187,6 +86187,9 @@ class JiraReviewStatusUpdater {
     }
     async processAwaitingToReleaseStatus() {
         await this.updateTaskStatus(this.options.idAwaitingToRelease);
+    }
+    async processCodeReviewStatus() {
+        await this.updateTaskStatus(this.options.idCodeReview);
     }
     async fetchLabelsOnPR() {
         var _a;
@@ -86207,7 +86210,7 @@ class JiraReviewStatusUpdater {
         core.info('Successful - updated transaction');
     }
 }
-exports.JiraReviewStatusUpdater = JiraReviewStatusUpdater;
+exports.JiraStatusUpdater = JiraStatusUpdater;
 
 
 /***/ }),
@@ -86223,8 +86226,9 @@ var OperationTypeEnum;
 (function (OperationTypeEnum) {
     OperationTypeEnum["CreateRelease"] = "createRelease";
     OperationTypeEnum["MarkRelease"] = "markRelease";
-    OperationTypeEnum["CodeReviewStatusUpdater"] = "codeReviewStatusUpdater";
+    OperationTypeEnum["CodeReviewDoneStatusUpdater"] = "codeReviewDoneStatusUpdater";
     OperationTypeEnum["AwaitingToReleaseStatusUpdater"] = "awaitingToReleaseStatusUpdater";
+    OperationTypeEnum["CodeReviewStatusUpdater"] = "codeReviewStatusUpdater";
 })(OperationTypeEnum || (exports.OperationTypeEnum = OperationTypeEnum = {}));
 
 
@@ -86273,7 +86277,7 @@ const core = __importStar(__nccwpck_require__(37484));
 const JiraCreateRelease_1 = __nccwpck_require__(88810);
 const OperationTypeEnum_1 = __nccwpck_require__(61055);
 const JiraMarkRelease_1 = __nccwpck_require__(74397);
-const JiraReviewStatusUpdater_1 = __nccwpck_require__(85456);
+const JiraStatusUpdater_1 = __nccwpck_require__(46824);
 async function run() {
     const email = core.getInput('jira_email');
     const token = core.getInput('jira_token');
@@ -86301,8 +86305,8 @@ async function run() {
             const jiraMark = new JiraMarkRelease_1.JiraMarkRelease(email, token, url, projectId, environment, commitMessage);
             await jiraMark.releaseVersion();
             break;
-        case (OperationTypeEnum_1.OperationTypeEnum.CodeReviewStatusUpdater):
-            const optionsCodeReview = {
+        case (OperationTypeEnum_1.OperationTypeEnum.CodeReviewDoneStatusUpdater):
+            const optionsCodeReviewDone = {
                 email,
                 token,
                 githubToken,
@@ -86311,8 +86315,8 @@ async function run() {
                 idCodeReviewDone,
                 idCodeReview
             };
-            const jiraReview = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(optionsCodeReview);
-            await jiraReview.processCodeReviewStatus();
+            const jiraReview = new JiraStatusUpdater_1.JiraStatusUpdater(optionsCodeReviewDone);
+            await jiraReview.processCodeReviewDoneStatus();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.AwaitingToReleaseStatusUpdater):
             const optionsAwaiting = {
@@ -86322,8 +86326,19 @@ async function run() {
                 url,
                 idAwaitingToRelease
             };
-            const jiraReviewRelease = new JiraReviewStatusUpdater_1.JiraReviewStatusUpdater(optionsAwaiting);
+            const jiraReviewRelease = new JiraStatusUpdater_1.JiraStatusUpdater(optionsAwaiting);
             await jiraReviewRelease.processAwaitingToReleaseStatus();
+            break;
+        case (OperationTypeEnum_1.OperationTypeEnum.CodeReviewStatusUpdater):
+            const optionsCodeReview = {
+                email,
+                token,
+                githubToken,
+                url,
+                idCodeReview
+            };
+            const jiraCodeReview = new JiraStatusUpdater_1.JiraStatusUpdater(optionsCodeReview);
+            await jiraCodeReview.processCodeReviewStatus();
             break;
         default:
             core.setFailed('Unknown operation type');

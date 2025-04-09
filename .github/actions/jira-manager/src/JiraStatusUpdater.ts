@@ -1,15 +1,15 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { Version3Client } from 'jira.js'
-import {JiraReviewStatusUpdaterInterface} from "./JiraReviewStatusUpdaterInterface";
+import {JiraStatusUpdaterInterface} from "./JiraStatusUpdaterInterface";
 
-export class JiraReviewStatusUpdater {
+export class JiraStatusUpdater {
     protected client: Version3Client;
     protected githubApi;
     protected context = github.context;
     protected issueKey:string = (github.context.payload.pull_request?.head?.ref.match(/([A-Za-z]+-\d+)/) || [])[1];
 
-    constructor(private readonly options: JiraReviewStatusUpdaterInterface) {
+    constructor(private readonly options: JiraStatusUpdaterInterface) {
         this.client = new Version3Client({
             host: options.url,
             authentication: {
@@ -21,7 +21,7 @@ export class JiraReviewStatusUpdater {
         });
         this.githubApi = github.getOctokit(options.githubToken);
     }
-    public async processCodeReviewStatus(){
+    public async processCodeReviewDoneStatus(){
         const labels = await this.fetchLabelsOnPR();
         const missingLabels:string[] = this.options.requiredLabels!.filter(label => !labels.includes(label));
         if ( missingLabels.length > 0 ) {
@@ -33,6 +33,9 @@ export class JiraReviewStatusUpdater {
     }
     public async processAwaitingToReleaseStatus(){
         await this.updateTaskStatus(this.options.idAwaitingToRelease!);
+    }
+    public async processCodeReviewStatus(){
+        await this.updateTaskStatus(this.options.idCodeReview!);
     }
     private async fetchLabelsOnPR(): Promise<any>
     {

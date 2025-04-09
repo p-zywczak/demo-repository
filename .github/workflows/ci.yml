@@ -1,4 +1,4 @@
-name: DEVELOP-ACTIONS
+name: DEVELOP-WORKFLOW
 
 on:
   pull_request:
@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Jira manager - review status updater
+      - name: Jira manager - Code review done status updater
         uses: ./.github/actions/jira-manager
         with:
           jira_email: ${{ secrets.JIRA_EMAIL }}
@@ -30,7 +30,7 @@ jobs:
           jira_id_code_review: ${{ vars.JIRA_ID_CODE_REVIEW }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           required_labels: '["CR1", "APPROVAL"]'
-          type: 'codeReviewStatusUpdater'
+          type: 'codeReviewDoneStatusUpdater'
 
   deploy_to_dev:
     name: 'Deploy to dev server'
@@ -125,6 +125,15 @@ jobs:
                   }
                 ]
             }
+
+      - name: Jira manager - Code review status updater
+        uses: ./.github/actions/jira-manager
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_id_code_review: ${{ vars.JIRA_ID_CODE_REVIEW }}
+          type: 'codeReviewStatusUpdater'
 
   quality_checks:
     name: 'Quality checks'
