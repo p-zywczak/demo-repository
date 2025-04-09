@@ -1,4 +1,4 @@
-name: CI/CD
+name: DEVELOP-ACTIONS
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ permissions: write-all
 jobs:
   jira_review_status_updater:
     name: 'Change jira task status after CR done'
-    if: github.event_name == 'pull_request' && (github.event.action == 'labeled' && github.event.action == 'unlabeled')
+    if: github.event_name == 'pull_request' && (github.event.action == 'labeled' || github.event.action == 'unlabeled')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -32,6 +32,25 @@ jobs:
           required_labels: '["CR1", "APPROVAL"]'
           type: 'codeReviewStatusUpdater'
 
+  deploy_to_dev:
+    name: 'Deploy to dev server'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to develop server
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/test/demo-repository
+            git checkout ${{ secrets.MAIN_BRANCH }}
+            git pull
+            composer install --ignore-platform-req=ext-xdebug --ignore-platform-req=ext-ldap
+            php artisan migrate
+            php artisan config:clear
+
   ci_cd:
     runs-on: ubuntu-latest
     if: >
@@ -45,9 +64,6 @@ jobs:
       ||
       (github.event_name == 'pull_request' &&
         startsWith(github.event.pull_request.base.ref, 'release/'))
-      ||
-      (github.event_name == 'push' &&
-        github.ref == 'refs/heads/develop')
       ||
       (github.event_name == 'issue_comment' &&
         github.event.comment.body == '/ping' &&
