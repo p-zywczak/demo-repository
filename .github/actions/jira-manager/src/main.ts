@@ -71,8 +71,6 @@ async function run(): Promise<void> {
         default:
             core.setFailed('Unknown operation type');
     }
-
-
 }
 
 run();
