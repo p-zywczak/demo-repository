@@ -51,6 +51,15 @@ jobs:
             php artisan migrate
             php artisan config:clear
 
+      - name: Jira manager - Awaiting to release status updater
+        uses: ./.github/actions/jira-manager
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_id_code_review: ${{ vars.JIRA_ID_AWAITING_TO_RELEASE }}
+          type: 'awaitingToReleaseStatusUpdater'
+
   notification:
     name: 'Notification teams'
     if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
