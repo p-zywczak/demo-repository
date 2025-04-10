@@ -12,17 +12,6 @@ on:
 permissions: write-all
   
 jobs:
-  get_source_branch:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wyświetl nazwę gałęzi źródłowej PR
-        run: |
-          echo "Gałąź źródłowa PR (head_ref): ${{ github.head_ref }}"
-          echo "Gałąź docelowa PR (base_ref): ${{ github.base_ref }}"
-          echo "Pełny kontekst zdarzenia (dla debugowania):"
-          echo "${{ toJSON(github.event) }}"
-
   jira_review_status_updater:
     name: 'Change jira task status after CR done'
     if: github.event_name == 'pull_request' && (github.event.action == 'labeled' || github.event.action == 'unlabeled')
@@ -76,7 +65,7 @@ jobs:
           jira_email: ${{ secrets.JIRA_EMAIL }}
           jira_token: ${{ secrets.JIRA_TOKEN }}
           jira_url: ${{ secrets.JIRA_URL }}
-          idAwaitingToRelease: ${{ vars.JIRA_ID_AWAITING_TO_RELEASE }}
+          jira_id_awaiting_to_release: ${{ vars.JIRA_ID_AWAITING_TO_RELEASE }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           github_ref: ${{ github.head_ref }}
           type: 'awaitingToReleaseStatusUpdater'
