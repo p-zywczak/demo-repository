@@ -86200,7 +86200,6 @@ class JiraStatusUpdater {
         }
         core.info(`Branch z issue_comment: ${JSON.stringify(branchName, null, 2)}`);
         core.info(`Github REFERENCE: ${this.options.githubRef}`);
-        core.info(`Github: ${JSON.stringify(github, null, 2)}`);
         const match = branchName.match(/([A-Za-z]+-\d+)/);
         return match[1];
     }
