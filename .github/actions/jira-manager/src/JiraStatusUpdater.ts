@@ -50,7 +50,7 @@ export class JiraStatusUpdater {
     }
     public async updateTaskStatus(id:string):Promise<void> {
         core.info(`KEY: ${this.issueKey} ID: ${id}`);
-        core.info(`BRANCH_NAMEREF: ${ this.options.githubRef}`);
+        core.info(`BRANCH_NAMEREF: ${JSON.stringify(github.context.payload, null, 2)}`);
         await this.client.issues.doTransition({
             issueIdOrKey: this.issueKey,
             transition: { id: id}
