@@ -44,9 +44,9 @@ export class JiraStatusUpdater {
             }
         }
         core.info(`Branch z issue_comment: ${JSON.stringify(branchName!, null, 2)}`);
-        core.info(`Github REFERENCE: ${this.options.githubRef}`);
         const match = branchName!.match(/([A-Za-z]+-\d+)/);
-
+        core.info(`match: ${match!}`);
+        core.info(`match1: ${match![1]}`);
         return match![1];
     }
     public async processCodeReviewDoneStatus(){

@@ -20,7 +20,7 @@ async function run(): Promise<void> {
     const commitMessage:string = core.getInput('commit_message');
     const requiredLabels:string[] = JSON.parse(core.getInput('required_labels') || '[]') as string[];
     const type:string = core.getInput('type') as OperationTypeEnum;
-    core.info(`MAIN GITHUB: ${ githubRef }`);
+
     switch (type) {
         case (OperationTypeEnum.CreateRelease):
             const jira:JiraCreateRelease = new JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
