@@ -54,6 +54,10 @@ jobs:
             php artisan migrate
             php artisan config:clear
 
+      - name: Debug - Wyświetlenie github.ref_name
+        run: |
+          echo "github.ref_name: ${{ github.ref_name }}"
+
       - name: Jira manager - Awaiting to release status updater
         uses: ./.github/actions/jira-manager
         with:
@@ -64,6 +68,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           github_ref: ${{ github.ref_name }}
           type: 'awaitingToReleaseStatusUpdater'
+
 
   notification:
     name: 'Notification teams'
