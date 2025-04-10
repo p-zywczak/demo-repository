@@ -86181,8 +86181,8 @@ class JiraStatusUpdater {
         if ((_b = (_a = this.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) {
             branchName = this.context.payload.pull_request.head.ref;
         }
-        else if (this.context.payload.ref) {
-            branchName = this.context.payload.ref.replace('refs/heads/', '');
+        else if (this.options.githubRef) {
+            branchName = this.options.githubRef;
         }
         else if ((_c = this.context.payload.issue) === null || _c === void 0 ? void 0 : _c.number) {
             const prNumber = this.context.payload.issue.number;

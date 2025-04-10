@@ -28,8 +28,8 @@ export class JiraStatusUpdater {
         let branchName: string;
         if( this.context.payload.pull_request?.head?.ref ) {
             branchName = this.context.payload.pull_request.head.ref;
-        } else if (this.context.payload.ref) {
-            branchName = this.context.payload.ref.replace('refs/heads/', '');
+        } else if (this.options.githubRef) {
+            branchName = this.options.githubRef;
         } else if (this.context.payload.issue?.number) {
             const prNumber = this.context.payload.issue.number;
             try {
