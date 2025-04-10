@@ -65,7 +65,10 @@ export class JiraStatusUpdater {
     private async fetchLabelsOnPR(): Promise<any>
     {
         const {owner, repo} = this.context.repo
-        const prNumber:number = this.context.payload.pull_request?.number!;
+        const prNumber = this.context.payload.pull_request?.number;
+        if (prNumber === undefined) {
+            throw new Error('Pull request number is undefined');
+        }
         const { data } = await this.githubApi.rest.issues.listLabelsOnIssue({
             owner,
             repo,

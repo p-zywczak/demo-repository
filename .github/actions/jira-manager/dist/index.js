@@ -86222,6 +86222,9 @@ class JiraStatusUpdater {
         var _a;
         const { owner, repo } = this.context.repo;
         const prNumber = (_a = this.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+        if (prNumber === undefined) {
+            throw new Error('Pull request number is undefined');
+        }
         const { data } = await this.githubApi.rest.issues.listLabelsOnIssue({
             owner,
             repo,
