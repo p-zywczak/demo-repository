@@ -44,8 +44,6 @@ export class JiraStatusUpdater {
             }
         }
         core.info(`Branch z issue_comment: ${JSON.stringify(branchName!, null, 2)}`);
-        core.info(`test: ${JSON.stringify(this.context.payload, null, 2)}`);
-        core.info(`Context: ${JSON.stringify(this.context, null, 2)}`);
         core.info(`Github: ${JSON.stringify(github, null, 2)}`);
         const match = branchName!.match(/([A-Za-z]+-\d+)/);
 
