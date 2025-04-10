@@ -86198,7 +86198,8 @@ class JiraStatusUpdater {
                 core.error(`Błąd pobierania danych PR: ${error}`);
             }
         }
-        core.info(`Branch z issue_comment: ${branchName}`);
+        core.info(`Branch z issue_comment: ${JSON.stringify(branchName, null, 2)}`);
+        core.info(`test: ${JSON.stringify(this.context.payload, null, 2)}`);
         const match = branchName.match(/([A-Za-z]+-\d+)/);
         return match[1];
     }

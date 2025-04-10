@@ -26,7 +26,6 @@ export class JiraStatusUpdater {
     }
     private async extractIssueKey():Promise<string> {
         let branchName: string;
-
         if( this.context.payload.pull_request?.head?.ref ) {
             branchName = this.context.payload.pull_request.head.ref;
         } else if (this.context.payload.ref) {
@@ -44,7 +43,8 @@ export class JiraStatusUpdater {
                 core.error(`Błąd pobierania danych PR: ${error}`);
             }
         }
-        core.info(`Branch z issue_comment: ${branchName!}`);
+        core.info(`Branch z issue_comment: ${JSON.stringify(branchName!, null, 2)}`);
+        core.info(`test: ${JSON.stringify(this.context.payload, null, 2)}`);
         const match = branchName!.match(/([A-Za-z]+-\d+)/);
 
         return match![1];
