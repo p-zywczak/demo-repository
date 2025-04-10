@@ -62,7 +62,7 @@ jobs:
           jira_url: ${{ secrets.JIRA_URL }}
           jira_id_code_review: ${{ vars.JIRA_ID_AWAITING_TO_RELEASE }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_ref: ${{ GITHUB_HEAD_REF }}
+          github_ref: ${{ secrets.GITHUB_HEAD_REF }}
           type: 'awaitingToReleaseStatusUpdater'
 
   notification:
