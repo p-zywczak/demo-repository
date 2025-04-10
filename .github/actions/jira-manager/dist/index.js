@@ -86199,8 +86199,9 @@ class JiraStatusUpdater {
             }
         }
         core.info(`Branch z issue_comment: ${JSON.stringify(branchName, null, 2)}`);
-        core.info(`Github REFERENCE: ${this.options.githubRef}`);
         const match = branchName.match(/([A-Za-z]+-\d+)/);
+        core.info(`match: ${match}`);
+        core.info(`match1: ${match[1]}`);
         return match[1];
     }
     async processCodeReviewDoneStatus() {
@@ -86324,7 +86325,6 @@ async function run() {
     const commitMessage = core.getInput('commit_message');
     const requiredLabels = JSON.parse(core.getInput('required_labels') || '[]');
     const type = core.getInput('type');
-    core.info(`MAIN GITHUB: ${githubRef}`);
     switch (type) {
         case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):
             const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
