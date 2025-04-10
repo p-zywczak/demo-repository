@@ -43,10 +43,7 @@ export class JiraStatusUpdater {
                 core.error(`Błąd pobierania danych PR: ${error}`);
             }
         }
-        core.info(`Branch z issue_comment: ${JSON.stringify(branchName!, null, 2)}`);
         const match = branchName!.match(/([A-Za-z]+-\d+)/);
-        core.info(`match: ${match!}`);
-        core.info(`match1: ${match![1]}`);
         return match![1];
     }
     public async processCodeReviewDoneStatus(){
@@ -77,8 +74,6 @@ export class JiraStatusUpdater {
         return data.map(label => label.name);
     }
     public async updateTaskStatus(id:string):Promise<void> {
-        core.info(`KEY: ${this.issueKey} ID: ${id}`);
-        core.info(`BRANCH_NAMEREF: ${JSON.stringify(github.context.payload, null, 2)}`);
         await this.client.issues.doTransition({
             issueIdOrKey: this.issueKey,
             transition: { id: id}
