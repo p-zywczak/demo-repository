@@ -44,6 +44,7 @@ async function run(): Promise<void> {
                 idCodeReview
             };
             const jiraReview:JiraStatusUpdater = new JiraStatusUpdater(optionsCodeReviewDone);
+            await jiraReview.init();
             await jiraReview.processCodeReviewDoneStatus();
             break;
         case (OperationTypeEnum.AwaitingToReleaseStatusUpdater):
@@ -55,6 +56,7 @@ async function run(): Promise<void> {
                 idAwaitingToRelease
             };
             const jiraReviewRelease:JiraStatusUpdater = new JiraStatusUpdater(optionsAwaiting);
+            await jiraReviewRelease.init();
             await jiraReviewRelease.processAwaitingToReleaseStatus();
             break;
         case (OperationTypeEnum.CodeReviewStatusUpdater):
@@ -67,6 +69,7 @@ async function run(): Promise<void> {
                 githubRef
             };
             const jiraCodeReview:JiraStatusUpdater = new JiraStatusUpdater(optionsCodeReview);
+            await jiraCodeReview.init();
             await jiraCodeReview.processCodeReviewStatus();
             break;
         default:

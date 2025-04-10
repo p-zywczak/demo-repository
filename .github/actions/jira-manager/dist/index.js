@@ -86159,10 +86159,8 @@ const github = __importStar(__nccwpck_require__(93228));
 const jira_js_1 = __nccwpck_require__(7450);
 class JiraStatusUpdater {
     constructor(options) {
-        var _a, _b;
         this.options = options;
         this.context = github.context;
-        this.issueKey = (((_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref.match(/([A-Za-z]+-\d+)/)) || [])[1];
         this.client = new jira_js_1.Version3Client({
             host: options.url,
             authentication: {
@@ -86173,6 +86171,36 @@ class JiraStatusUpdater {
             }
         });
         this.githubApi = github.getOctokit(options.githubToken);
+    }
+    async init() {
+        this.issueKey = await this.extractIssueKey();
+    }
+    async extractIssueKey() {
+        var _a, _b, _c;
+        let branchName;
+        if ((_b = (_a = this.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) {
+            branchName = this.context.payload.pull_request.head.ref;
+        }
+        else if (this.context.payload.ref) {
+            branchName = this.context.payload.ref.replace('refs/heads/', '');
+        }
+        else if ((_c = this.context.payload.issue) === null || _c === void 0 ? void 0 : _c.number) {
+            const prNumber = this.context.payload.issue.number;
+            try {
+                const prData = await this.githubApi.rest.pulls.get({
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    pull_number: prNumber,
+                });
+                branchName = prData.data.head.ref;
+            }
+            catch (error) {
+                core.error(`Błąd pobierania danych PR: ${error}`);
+            }
+        }
+        core.debug(`Branch z issue_comment: ${branchName}`);
+        const match = branchName.match(/([A-Za-z]+-\d+)/);
+        return match[1];
     }
     async processCodeReviewDoneStatus() {
         const labels = await this.fetchLabelsOnPR();
@@ -86318,6 +86346,7 @@ async function run() {
                 idCodeReview
             };
             const jiraReview = new JiraStatusUpdater_1.JiraStatusUpdater(optionsCodeReviewDone);
+            await jiraReview.init();
             await jiraReview.processCodeReviewDoneStatus();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.AwaitingToReleaseStatusUpdater):
@@ -86329,6 +86358,7 @@ async function run() {
                 idAwaitingToRelease
             };
             const jiraReviewRelease = new JiraStatusUpdater_1.JiraStatusUpdater(optionsAwaiting);
+            await jiraReviewRelease.init();
             await jiraReviewRelease.processAwaitingToReleaseStatus();
             break;
         case (OperationTypeEnum_1.OperationTypeEnum.CodeReviewStatusUpdater):
@@ -86341,6 +86371,7 @@ async function run() {
                 githubRef
             };
             const jiraCodeReview = new JiraStatusUpdater_1.JiraStatusUpdater(optionsCodeReview);
+            await jiraCodeReview.init();
             await jiraCodeReview.processCodeReviewStatus();
             break;
         default:
