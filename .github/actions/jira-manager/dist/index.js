@@ -86325,6 +86325,7 @@ async function run() {
     const commitMessage = core.getInput('commit_message');
     const requiredLabels = JSON.parse(core.getInput('required_labels') || '[]');
     const type = core.getInput('type');
+    core.info(`MAIN GITHUB: ${githubRef}`);
     switch (type) {
         case (OperationTypeEnum_1.OperationTypeEnum.CreateRelease):
             const jira = new JiraCreateRelease_1.JiraCreateRelease(email, token, url, projectId, environment, idAwaitingToTesting, githubRef);
