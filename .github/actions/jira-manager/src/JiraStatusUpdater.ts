@@ -28,8 +28,6 @@ export class JiraStatusUpdater {
         let branchName: string;
         if( this.context.payload.pull_request?.head?.ref ) {
             branchName = this.context.payload.pull_request.head.ref;
-        } else if (this.options.githubRef) {
-            branchName = this.options.githubRef;
         } else if (this.context.payload.issue?.number) {
             const prNumber = this.context.payload.issue.number;
             try {
@@ -42,6 +40,8 @@ export class JiraStatusUpdater {
             } catch (error) {
                 core.error(`Błąd pobierania danych PR: ${error}`);
             }
+        } else if (this.options.githubRef) {
+            branchName = this.options.githubRef;
         }
         const match = branchName!.match(/([A-Za-z]+-\d+)/);
         return match![1];
