@@ -205,6 +205,17 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/checkout@v3
 
+      - name: Generate env.testing from .env.example
+        run: |
+          cp .env.example env.testing
+          sed -i 's|APP_KEY=.*|APP_KEY=base64:i4lYHYzzu3nGQoM9oeT3zrtCF3KMI0W691VRCFOGuNI=|' env.testing
+          sed -i 's|DISABLE_PERMISSIONS=.*|DISABLE_PERMISSIONS=true|' env.testing
+          sed -i 's|DB_HOST=.*|DB_HOST=127.0.0.1|' env.testing
+          sed -i 's|DB_DATABASE=.*|DB_DATABASE=testing|' env.testing
+          sed -i 's|DB_USERNAME=.*|DB_USERNAME=test_user|' env.testing
+          sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=test_password|' env.testing
+          cat env.testing
+
       - name: Set up PHP
         if: github.event_name == 'pull_request'
         uses: shivammathur/setup-php@v2
