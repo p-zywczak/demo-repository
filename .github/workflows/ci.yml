@@ -1,8 +1,8 @@
-name: CI/CD
+name: DEVELOP-WORKFLOW
 
 on:
   pull_request:
-    types: [edited ,labeled, unlabeled, opened, synchronize]
+    types: [edited ,labeled, unlabeled, opened, synchronize, closed]
   push:
     branches:
       - develop
@@ -12,56 +12,75 @@ on:
 permissions: write-all
   
 jobs:
-  ci_cd:
+  jira_review_status_updater:
+    name: 'Change jira task status after CR done'
+    if: github.event_name == 'pull_request' && (github.event.action == 'labeled' || github.event.action == 'unlabeled')
     runs-on: ubuntu-latest
-    if: >
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.base.ref == 'develop' &&
-        github.event.pull_request.head.ref != 'main')
-      ||
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.base.ref == 'main' &&
-        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
-      ||
-      (github.event_name == 'pull_request' &&
-        startsWith(github.event.pull_request.base.ref, 'release/'))
-      ||
-      (github.event_name == 'push' &&
-        github.ref == 'refs/heads/develop')
-      ||
-      (github.event_name == 'issue_comment' &&
-        github.event.comment.body == '/ping' &&
-        github.event.issue.pull_request)
-        
     steps:
       - uses: actions/checkout@v2
-            
-      - name: Manger Labels
-        uses: ./.github/actions/manager-labels
+
+      - name: Jira manager - Code review done status updater
+        uses: ./.github/actions/jira-manager
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
+          jira_id_code_review_done: ${{ vars.JIRA_ID_CODE_REVIEW_DONE }}
+          jira_id_code_review: ${{ vars.JIRA_ID_CODE_REVIEW }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           required_labels: '["CR1", "APPROVAL"]'
-          skip_labels_check: '["DO MERGE"]'
+          type: 'codeReviewDoneStatusUpdater'
 
+  deploy_to_dev:
+    name: 'Deploy to dev server'
+    if: github.event.pull_request.merged == true && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Assign PR creator
-        if: github.event_name == 'pull_request' && github.event.action == 'opened'
-        uses: actions/github-script@v6
+      - name: Deploy to develop server
+        uses: appleboy/ssh-action@v0.1.5
         with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            const prNumber = context.payload.pull_request.number;
-            const prCreator = context.payload.pull_request.user.login;
-            
-            await github.rest.issues.addAssignees({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              assignees: [prCreator]
-            });
-      
+            cd /var/www/test/demo-repository
+            git checkout ${{ secrets.MAIN_BRANCH }}
+            git pull
+            composer install --ignore-platform-req=ext-xdebug --ignore-platform-req=ext-ldap
+            php artisan migrate
+            php artisan config:clear
+
+      - name: Debug - Wyświetlenie github.ref_name
+        run: |
+          echo "github.ref_name: ${{ github.ref_name }}"
+
+      - name: Jira manager - Awaiting to release status updater
+        if: github.event.pull_request.merged == true
+        uses: ./.github/actions/jira-manager
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_id_awaiting_to_release: ${{ vars.JIRA_ID_AWAITING_TO_RELEASE }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_ref: ${{ github.head_ref }}
+          type: 'awaitingToReleaseStatusUpdater'
+
+
+  notification:
+    name: 'Notification teams'
+    if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
-        if: github.event_name == 'issue_comment' && github.event.comment.body == '/ping'
         with:
           webhook_url: ${{ secrets.MSTEAMS_WEBHOOK_PR }}
           raw: >-
@@ -130,52 +149,57 @@ jobs:
                 ]
             }
 
-      - name: Remove labels, approve CR1 and CR2
-        if: github.event_name == 'pull_request' && (github.event.action != 'labeled' && github.event.action != 'unlabeled')
+      - name: Jira manager - Code review status updater
+        uses: ./.github/actions/jira-manager
+        with:
+          jira_email: ${{ secrets.JIRA_EMAIL }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_id_code_review: ${{ vars.JIRA_ID_CODE_REVIEW }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_ref: ${{ github.ref_name }}
+          type: 'codeReviewStatusUpdater'
+
+  quality_checks:
+    name: 'Quality checks'
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.base.ref == 'develop' &&
+        github.event.pull_request.head.ref != 'main')
+      ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.base.ref == 'main' &&
+        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+      ||
+      (github.event_name == 'pull_request' &&
+        startsWith(github.event.pull_request.base.ref, 'release/'))
+        
+    steps:
+      - uses: actions/checkout@v2
+            
+      - name: Manger Labels
+        uses: ./.github/actions/manager-labels
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          required_labels: '["CR1", "APPROVAL"]'
+          skip_labels_check: '["DO MERGE"]'
+
+
+      - name: Assign PR creator
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
         uses: actions/github-script@v6
         with:
           script: |
-            const issue_number = context.payload.pull_request.number;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
+            const prNumber = context.payload.pull_request.number;
+            const prCreator = context.payload.pull_request.user.login;
             
-            const labelsToRemove = ['CR1', 'CR2', 'APPROVAL'];
-            
-            for (const label of labelsToRemove) {
-              try {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issue_number,
-                  name: label
-                });
-              } catch (error) {
-              }
-            }
-            
-            try {
-              const reviewsResponse = await github.rest.pulls.listReviews({
-                owner,
-                repo,
-                pull_number: issue_number,
-              });
-
-              const reviews = reviewsResponse.data;
-
-              for (const review of reviews) {
-                if (review.state === 'APPROVED') {
-                  await github.rest.pulls.dismissReview({
-                    owner,
-                    repo,
-                    pull_number: issue_number,
-                    review_id: review.id,
-                    message: 'Automatyczne cofnięcie zatwierdzenia.'
-                  });
-                }
-              }
-            } catch (error) {
-              console.error('Błąd podczas cofania recenzji:', error);
-            }
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              assignees: [prCreator]
+            });
 
       - name: Checkout repository
         if: github.event_name == 'pull_request'

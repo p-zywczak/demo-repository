@@ -11,19 +11,12 @@ permissions: write-all
 
 jobs:
   jira-release1:
-    name: Create release on JIRA -testowanie
+    name: Create release on JIRA
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/release/') && github.event.created == true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Extract Release Version
-        id: extract_version
-        run: |
-          echo "RELEASE_VERSION=v${GITHUB_REF##*/}" >> $GITHUB_ENV
-        env:
-          GITHUB_REF: ${{ github.ref }}
 
       - name: Jira manager - create release
         uses: ./.github/actions/jira-manager
@@ -34,7 +27,7 @@ jobs:
           jira_project_id: ${{ secrets.JIRA_PROJECT_ID }}
           environment: ${{ vars.ENVIRONMENT }}
           jira_id_awaiting_to_testing: ${{ vars.JIRA_ID_AWAITING_TO_TESTING }}
-          github_ref: ${{ env.RELEASE_VERSION }}
+          github_ref: ${{ github.ref }}
           type: 'createRelease'
 
   rollback_release:
