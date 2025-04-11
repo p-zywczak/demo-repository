@@ -25,7 +25,7 @@ export class LabelRemover
                 });
             }
         } catch (error) {
-
+            console.error('An error occurred while removing labels:', error);
         }
     }
 }

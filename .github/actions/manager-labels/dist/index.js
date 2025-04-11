@@ -30068,6 +30068,7 @@ class LabelRemover {
             }
         }
         catch (error) {
+            console.error('An error occurred while removing labels:', error);
         }
     }
 }
@@ -30120,7 +30121,10 @@ const github = __importStar(__nccwpck_require__(3228));
 const LabelChecker_1 = __nccwpck_require__(1134);
 const LabelRemover_1 = __nccwpck_require__(159);
 async function run() {
-    var _a, _b, _c;
+    const prPayload = github.context.payload.pull_request;
+    if (!prPayload) {
+        throw new Error('This action can only be run on pull request events.');
+    }
     const requiredLabels = JSON.parse(core.getInput('required_labels'));
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels'));
     const skipLabelsCheck = JSON.parse(core.getInput('skip_labels_check'));
@@ -30128,10 +30132,10 @@ async function run() {
     const context = {
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        prNumber: (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number,
+        prNumber: prPayload.number,
         actor: github.context.actor,
-        prAuthor: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.user.login,
-        branchName: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.head.ref,
+        prAuthor: prPayload.user.login,
+        branchName: prPayload.head.ref,
         eventName: github.context.eventName,
         eventAction: github.context.payload.action || '',
     };

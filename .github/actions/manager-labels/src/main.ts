@@ -4,6 +4,11 @@ import { LabelChecker } from './LabelChecker';
 import { LabelRemover } from './LabelRemover';
 
 async function run(): Promise<void> {
+    const prPayload = github.context.payload.pull_request;
+    if (!prPayload) {
+        throw new Error('This action can only be run on pull request events.');
+    }
+
     const requiredLabels = JSON.parse(core.getInput('required_labels')) as string[];
     const anyOfLabels = JSON.parse(core.getInput('any_of_labels')) as string[][];
     const skipLabelsCheck = JSON.parse(core.getInput('skip_labels_check')) as string[];
@@ -11,10 +16,10 @@ async function run(): Promise<void> {
     const context = {
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        prNumber: github.context.payload.pull_request?.number!,
+        prNumber: prPayload.number,
         actor: github.context.actor,
-        prAuthor: github.context.payload.pull_request?.user.login!,
-        branchName: github.context.payload.pull_request?.head.ref!,
+        prAuthor: prPayload.user.login,
+        branchName: prPayload.head.ref,
         eventName: github.context.eventName,
         eventAction: github.context.payload.action || '',
     }
