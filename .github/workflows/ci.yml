@@ -177,14 +177,6 @@ jobs:
         
     steps:
       - uses: actions/checkout@v2
-            
-      - name: Manger Labels
-        uses: ./.github/actions/manager-labels
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          required_labels: '["CR1", "APPROVAL"]'
-          skip_labels_check: '["DO MERGE"]'
-
 
       - name: Assign PR creator
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
@@ -254,3 +246,9 @@ jobs:
             php artisan migrate
             php artisan config:clear
 
+      - name: Manger Labels
+        uses: ./.github/actions/manager-labels
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          required_labels: '["CR1", "APPROVAL"]'
+          skip_labels_check: '["DO MERGE"]'
