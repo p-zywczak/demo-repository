@@ -155,7 +155,7 @@ jobs:
   deploy-to-pre:
     name: Deploy to Pre Server
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/release/')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -168,7 +168,7 @@ jobs:
     name: Create Pull Request to Main
     needs: deploy-to-pre
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/release/')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
