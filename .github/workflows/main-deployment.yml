@@ -144,7 +144,7 @@ jobs:
                                     },
                                     {
                                         "type": "TextBlock",
-                                        "text": "${{ env.CHANGELOG }}",
+                                        "text": ${{ steps.prep_changelog.outputs.safe }},
                                         "wrap": true
                                     }
                                 ]
