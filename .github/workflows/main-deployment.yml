@@ -59,102 +59,105 @@ jobs:
           SAFE=$(printf '%s' "${{ steps.changelog.outputs.changelog }}" | jq -Rs .)
           echo "safe=$SAFE" >> "$GITHUB_OUTPUT"
 
+      - name: Build Teams card
+        id: build_card
+        run: |
+          cat > card.json <<'JSON'
+          {
+            "type": "message",
+            "attachments":[
+              {
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content":{
+                  "type": "AdaptiveCard",
+                  "version": "1.2",
+                  "body":[
+                    {
+                      "type": "ColumnSet",
+                      "columns":[
+                        {
+                          "type": "Column",
+                          "width": "stretch",
+                          "items":[
+                            {
+                              "type": "TextBlock",
+                              "text": "${{ secrets.ENVIRONMENT }} Release v${{ env.VER }}",
+                              "weight": "Bolder",
+                              "size": "Large",
+                              "color": "Good"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Column",
+                          "width": "auto",
+                          "items":[
+                            {
+                              "type": "Image",
+                              "url": "https://img.icons8.com/color/48/000000/checked--v1.png",
+                              "size": "Small",
+                              "horizontalAlignment": "Right",
+                              "altText": "Zielona Fajka"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Najnowsza wersja v${{ env.VER }} została wdrożona na serwery DEMO oraz PROD.",
+                      "wrap": true,
+                      "size": "Medium"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Data i czas release: ${{ env.RELEASE_DATE }}",
+                      "wrap": true,
+                      "size": "Small",
+                      "color": "Accent"
+                    },
+                    {
+                      "type": "ActionSet",
+                      "actions":[
+                        {
+                          "type": "Action.ToggleVisibility",
+                          "title": "Changelog",
+                          "targetElements":[ "changelogContainer" ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Container",
+                      "id": "changelogContainer",
+                      "isVisible": false,
+                      "items":[
+                        {
+                          "type": "TextBlock",
+                          "text": "Changelog:",
+                          "weight": "Bolder",
+                          "size": "Medium"
+                        },
+                        {
+                          "type": "TextBlock",
+                          "text": ${{ steps.prep_changelog.outputs.safe }},
+                          "wrap": true
+                        }
+                      ]
+                    }
+                  ],
+                  "actions":[]
+                }
+              }
+            ]
+          }
+          JSON
+
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
         if: always()
         with:
           webhook_url: ${{ secrets.MSTEAMS_WEBHOOK_RELEASE }}
-          raw: >-
-            {
-              "type": "message",
-              "attachments":
-                [
-                  {
-                    "contentType": "application/vnd.microsoft.card.adaptive",
-                    "content":
-                      {
-                        "type": "AdaptiveCard",
-                        "version": "1.2",
-                        "body":
-                          [
-                            {
-                              "type": "ColumnSet",
-                              "columns": [
-                                {
-                                  "type": "Column",
-                                  "width": "stretch",
-                                  "items": [
-                                    {
-                                      "type": "TextBlock",
-                                      "text": "${{ secrets.ENVIRONMENT }} Release v${{ env.VER }}",
-                                      "weight": "Bolder",
-                                      "size": "Large",
-                                      "color": "Good"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "Column",
-                                  "width": "auto",
-                                  "items": [
-                                    {
-                                      "type": "Image",
-                                      "url": "https://img.icons8.com/color/48/000000/checked--v1.png",
-                                      "size": "Small",
-                                      "horizontalAlignment": "Right",
-                                      "altText": "Zielona Fajka"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "TextBlock",
-                              "text": "Najnowsza wersja v${{ env.VER }} została wdrożona na serwery DEMO oraz PROD.",
-                              "wrap": true,
-                              "size": "Medium"
-                            },
-                            {
-                              "type": "TextBlock",
-                              "text": "Data i czas release: ${{ env.RELEASE_DATE }}",
-                              "wrap": true,
-                              "size": "Small",
-                              "color": "Accent"
-                            },
-                            {
-                                "type": "ActionSet",
-                                "actions": [
-                                    {
-                                        "type": "Action.ToggleVisibility",
-                                        "title": "Changelog",
-                                        "targetElements": ["changelogContainer"]
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "Container",
-                                "id": "changelogContainer",
-                                "isVisible": false,
-                                "items": [
-                                    {
-                                        "type": "TextBlock",
-                                        "text": "Changelog:",
-                                        "weight": "Bolder",
-                                        "size": "Medium"
-                                    },
-                                    {
-                                        "type": "TextBlock",
-                                        "text": ${{ steps.prep_changelog.outputs.safe }},
-                                        "wrap": true
-                                    }
-                                ]
-                            }
-                          ],
-                        "actions": []
-                      }
-                  }
-                ]
-            }  
+          raw-from-file: card.json
 
   create-tag:
     name: Create Tag on Main and deploy to Prod
