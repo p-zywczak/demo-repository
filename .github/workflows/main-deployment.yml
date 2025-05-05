@@ -54,10 +54,10 @@ jobs:
           myToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Export changelog for Teams card
+        id: prep_changelog
         run: |
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo "${{ steps.changelog.outputs.changelog }}" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          CHANGELOGS=$(printf '%s' "${{ steps.changelog.outputs.changelog }}" | jq -Rs .)
+          echo "changelogs=$CHANGELOGS" >> "$GITHUB_OUTPUT"
 
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
@@ -144,7 +144,7 @@ jobs:
                                     },
                                     {
                                         "type": "TextBlock",
-                                        "text": "${{ env.CHANGELOG }}",
+                                        "text": ${{ steps.prep_changelog.outputs.changelogs }},
                                         "wrap": true
                                     }
                                 ]
