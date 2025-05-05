@@ -152,12 +152,11 @@ jobs:
           }
           JSON
 
-      - name: Microsoft Teams Notification
-        uses: skitionek/notify-microsoft-teams@master
-        if: always()
-        with:
-          webhook_url: ${{ secrets.MSTEAMS_WEBHOOK_RELEASE }}
-          raw-from-file: card.json
+      - name: Send card to Microsoft Teams
+        run: |
+          curl --fail -H "Content-Type: application/json" \
+               --data @card.json \
+               "${{ secrets.MSTEAMS_WEBHOOK_RELEASE }}"
 
   create-tag:
     name: Create Tag on Main and deploy to Prod
