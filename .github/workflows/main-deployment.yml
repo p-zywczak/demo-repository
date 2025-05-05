@@ -47,19 +47,16 @@ jobs:
         run: |
           TZ="Europe/Warsaw" date "+RELEASE_DATE=%Y-%m-%d %H:%M:%S %Z" >> $GITHUB_ENV
 
-      - name: Generate Changelog
-        id: generate_changelog
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v4.6.2
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Export changelog for Teams card
         run: |
-          LAST_TAG=$(git describe --tags --abbrev=0)
-
-          CHANGELOG=$(git log ${LAST_TAG}..HEAD --pretty=format:"• %s")
-
-          if [ -z "$CHANGELOG" ]; then
-            CHANGELOG="• Brak zmian."
-          fi
-
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "${{ steps.changelog.outputs.changelog }}" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Microsoft Teams Notification
