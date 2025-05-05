@@ -8,6 +8,27 @@ on:
 permissions: write-all
 
 jobs:
+  extract_version:
+    name: Extract Version
+    runs-on: ubuntu-latest
+    outputs:
+      ver: ${{ steps.extract.outputs.ver }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Extract Version from Commit Message
+        id: extract
+        run: |
+          VERSION=$(git log -1 --pretty=%B \
+            | grep -oP '(release|hotfix)/\K[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?' \
+            | head -n1 | tr -d '[:space:]')
+          if [ -z "$VERSION" ]; then
+            echo "Version not found in commit message." >&2
+            exit 1
+          fi
+          echo "ver=$VERSION" >> $GITHUB_OUTPUT
+          
   notification:
     name: 'Notification'
     if: contains(github.event.head_commit.message, 'release/') || contains(github.event.head_commit.message, 'hotfix/')
