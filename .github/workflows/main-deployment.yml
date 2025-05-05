@@ -56,7 +56,13 @@ jobs:
       - name: Prepare changelog JSON‑safe
         id: prep_changelog
         run: |
-          SAFE=$(printf '%s' "${{ steps.changelog.outputs.changelog }}" | jq -Rs .)
+          ALL="${{ steps.changelog.outputs.changelog }}"
+          FULL_LINES=$(printf '%s\n' "$ALL" | wc -l)
+          CUT=$(printf '%s\n' "$ALL" | head -n 100)
+          if [ "$FULL_LINES" -gt 100 ]; then
+            CUT="$CUT\n… _i $(($FULL_LINES-100)) kolejnych commitów_"
+          fi
+          SAFE=$(printf '%b' "$CUT" | jq -Rs .)
           echo "safe=$SAFE" >> "$GITHUB_OUTPUT"
 
       - name: Microsoft Teams Notification
