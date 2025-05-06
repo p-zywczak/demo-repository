@@ -164,17 +164,20 @@ jobs:
     name: 'Quality checks'
     runs-on: ubuntu-latest
     if: >
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.base.ref == 'develop' &&
-        github.event.pull_request.head.ref != 'main')
-      ||
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.base.ref == 'main' &&
-        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
-      ||
-      (github.event_name == 'pull_request' &&
-        startsWith(github.event.pull_request.base.ref, 'release/'))
-        
+      github.event_name == 'pull_request'
+      && github.event.action != 'labeled'
+      && github.event.action != 'unlabeled'
+      && github.event.action != 'closed'
+      &&
+      (
+        (github.event.pull_request.base.ref == 'develop' &&
+          github.event.pull_request.head.ref != 'main')
+        ||
+        (github.event.pull_request.base.ref == 'main' &&
+          startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+        ||
+          startsWith(github.event.pull_request.base.ref, 'release/')
+      )
     steps:
       - uses: actions/checkout@v2
 
