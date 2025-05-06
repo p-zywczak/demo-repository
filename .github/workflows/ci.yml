@@ -164,20 +164,16 @@ jobs:
     name: 'Quality checks'
     runs-on: ubuntu-latest
     if: >
-      github.event_name == 'pull_request'
-      && github.event.action != 'labeled'
-      && github.event.action != 'unlabeled'
-      && github.event.action != 'closed'
-      &&
-      (
-        (github.event.pull_request.base.ref == 'develop' &&
-          github.event.pull_request.head.ref != 'main')
-        ||
-        (github.event.pull_request.base.ref == 'main' &&
-          startsWith(github.event.pull_request.head.ref, 'hotfix/'))
-        ||
-          startsWith(github.event.pull_request.base.ref, 'release/')
-      )
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.base.ref == 'develop' &&
+        github.event.pull_request.head.ref != 'main')
+      ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.base.ref == 'main' &&
+        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+      ||
+      (github.event_name == 'pull_request' &&
+        startsWith(github.event.pull_request.base.ref, 'release/'))
     steps:
       - uses: actions/checkout@v2
 
@@ -201,6 +197,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Generate env.testing from .env.example
+        if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.action != 'closed'
         run: |
           cp .env.example env.testing
           sed -i 's|APP_KEY=.*|APP_KEY=base64:i4lYHYzzu3nGQoM9oeT3zrtCF3KMI0W691VRCFOGuNI=|' env.testing
@@ -212,25 +209,26 @@ jobs:
           cat env.testing
 
       - name: Set up PHP
-        if: github.event_name == 'pull_request'
+        if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.action != 'closed'
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           tools: composer
 
       - name: Install dependencies via Composer
-        if: github.event_name == 'pull_request'
+        if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.action != 'closed'
         run: composer install
 
       - name: Run cs fixer
-        if: github.event_name == 'pull_request'
+        if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.action != 'closed'
         run: composer run-script lint
         
       - name: Run Migrations for Testing
+        if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.action != 'closed'
         run: php artisan migrate --env=testing
           
       - name: Run GrumPHP
-        if: github.event_name == 'pull_request'
+        if:  github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.action != 'closed'
         run: |
           vendor/bin/grumphp run
 
