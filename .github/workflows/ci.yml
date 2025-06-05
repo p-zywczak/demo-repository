@@ -177,6 +177,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
+      - name: Debug
+        if: ${{ always() }}
+        run: echo ">>> PHP_VERSION = ${{ secrets.PHP_VERSION }}"
+        
       - name: Run Composer Lint
         if: ${{
             github.event.action != 'labeled' && 
