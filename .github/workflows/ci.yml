@@ -201,6 +201,7 @@ jobs:
           github.event.action != 'closed' &&
           steps.semver.outputs.comparison-result != '<'
           }}
+        run: ./vendor/bin/pint
         
       - name: Assign PR creator
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
