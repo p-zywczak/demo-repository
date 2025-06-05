@@ -177,9 +177,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Compare version
+      - name: Compare version PHP
         id: semver
-        uses: madhead/semver-utils@latest
+        uses: madhead/semver-utils@v4.3.0
         with:
           version: ${{ vars.PHP_VERSION }}
           compare-to: "8.4"
@@ -193,7 +193,6 @@ jobs:
           }}
         run: composer run-script lint
 
-      # 5) Krok dla PHP >= 8.4
       - name: Run Pint
         if: ${{ 
           github.event.action != 'labeled' &&
