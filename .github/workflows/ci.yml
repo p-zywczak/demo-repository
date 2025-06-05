@@ -176,25 +176,31 @@ jobs:
         startsWith(github.event.pull_request.base.ref, 'release/'))
     steps:
       - uses: actions/checkout@v2
-      
+
+      - name: Compare version
+        id: semver
+        uses: madhead/semver-utils@latest
+        with:
+          version: ${{ vars.PHP_VERSION }}
+          compare-to: "8.4"
+          
       - name: Run Composer Lint
         if: ${{ 
           github.event.action != 'labeled' &&
           github.event.action != 'unlabeled' &&
           github.event.action != 'closed' &&
-          version(vars.PHP_VERSION) < version('8.4')
+          steps.semver.outputs.comparison-result == '<'
           }}
         run: composer run-script lint
 
-      # 4) Krok Pint dla PHP >= 8.4
+      # 5) Krok dla PHP >= 8.4
       - name: Run Pint
         if: ${{ 
           github.event.action != 'labeled' &&
           github.event.action != 'unlabeled' &&
           github.event.action != 'closed' &&
-          version(vars.PHP_VERSION) >= version('8.4')
+          steps.semver.outputs.comparison-result != '<'
           }}
-        run: ./vendor/bin/pint
         
       - name: Assign PR creator
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
