@@ -38,13 +38,11 @@ jobs:
       github.event.pull_request.merged == false &&
       startsWith(github.event.pull_request.base.ref, 'main'))
     runs-on: ubuntu-latest
-    - name: Checkout repository
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v3
         with: { fetch-depth: 0 }
-
-      #################################################################
-      # 1. Znajdź najbliższy wcześniejszy release/x.x.x.x bez .pr_status
-      #################################################################
+        
       - name: Select rollback branch
         id: branch
         run: |
