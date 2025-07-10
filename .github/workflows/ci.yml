@@ -188,8 +188,6 @@ jobs:
         run: |
           echo " DEBUG semver outputs "
           echo "comparison-result: '${{ steps.semver.outputs.comparison-result }}'"
-          echo "all outputs:"
-          echo "${{ toJson(steps.semver.outputs) }}"
           
       - name: Run Composer Lint
         if: ${{ 
