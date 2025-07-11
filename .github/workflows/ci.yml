@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - develop
+      - feat/*
   issue_comment:
     types: [created]
     
