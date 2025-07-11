@@ -30141,8 +30141,18 @@ async function run() {
     };
     const labelRemover = new LabelRemover_1.LabelRemover(githubApi, context);
     if (context.eventName === 'pull_request' && context.eventAction === 'synchronize') {
-        await labelRemover.removeLabel(requiredLabels);
-        core.info('Removing required labels because a new commit was pushed to the branch.');
+        const { data: pr } = await githubApi.rest.pulls.get({
+            owner: context.owner,
+            repo: context.repo,
+            pull_number: context.prNumber,
+        });
+        if (pr.mergeable_state === 'dirty') {
+            core.info('Conflicts detected on PR — removing required labels.');
+            await labelRemover.removeLabel(requiredLabels);
+        }
+        else {
+            core.info(`No conflicts on PR, skipping label removal.`);
+        }
     }
     const labelChecker = new LabelChecker_1.LabelChecker(githubApi, context, labelRemover);
     if (await labelChecker.hasBypassSkipLabel(skipLabelsCheck)) {
