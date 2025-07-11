@@ -25,6 +25,14 @@ jobs:
         ||
         startsWith(github.event.pull_request.head.ref, 'release/')
       )
+      ||
+      (
+        github.event_name == 'push' &&
+        (
+          github.ref == 'refs/heads/develop' ||
+          startsWith(github.ref, 'refs/heads/feat/')
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
