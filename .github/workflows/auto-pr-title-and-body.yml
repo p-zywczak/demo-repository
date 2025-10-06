@@ -8,76 +8,60 @@ permissions:
   pull-requests: write
 
 env:
-  # 👇 Dostosuj do swojej instancji Jiry (bez trailing slash)
+  # 👇 ZMIEŃ na swoją instancję Jiry (bez końcowego '/')
   JIRA_BASE_URL: https://jira.example.com
 
 jobs:
   apply:
-    # Bezpiecznie: działa tylko dla PR-ów z tego samego repo (nie z forków)
+    # Bezpiecznie: tylko PR-y z tego samego repo (nie z forków)
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
-      - name: Update PR title & body
+      - name: Set PR title & replace template placeholders
         uses: actions/github-script@v7
         with:
           script: |
             const pr = context.payload.pull_request;
-            const branch = pr.head.ref; // np. feat/FLEX-123-cos-tam
+            const branch = pr.head.ref; // np. feat/flex-124-zadanie
             const currentTitle = pr.title || '';
             const origBody = pr.body || '';
 
-            // 1) Wyciągnij klucz JIRA (np. FLEX-123)
-            const m = branch.match(/([A-Z][A-Z0-9]+-\d+)/);
+            // 1) Segments & ticket
+            const typeSeg = (branch.split('/')[0] || '').toLowerCase(); // feat, fix, chore...
+            const m = branch.match(/([a-zA-Z][a-zA-Z0-9]+-\d+)/i);
             if (!m) { core.notice('Nie znaleziono klucza JIRA w nazwie brancha.'); return; }
-            const ticket = m[1];
+            const ticketRaw = m[1];               // np. flex-124
+            const ticketLower = ticketRaw.toLowerCase(); // flex-124
+            const ticketUpper = ticketRaw.toUpperCase(); // FLEX-124
+
+            // 2) Subject po kluczu (np. "-zadanie" -> "zadanie")
+            const idx = branch.toLowerCase().indexOf(ticketLower);
+            let after = idx >= 0 ? branch.slice(idx + ticketRaw.length) : '';
+            after = after.replace(/^[\/\-\_]+/, '');     // utnij wiodące / - _
+            const subject = after.replace(/[-_]+/g, ' ').trim(); // "zadanie" / "cos tam"
+
+            // 3) Tytuł: "feat/flex-124: zadanie" (lub bez subject)
+            const newTitle = `${typeSeg}/${ticketLower}` + (subject ? `: ${subject}` : '');
+
+            // 4) Treść PR – podmień placeholdery z Twojego szablonu
             const jiraBase = process.env.JIRA_BASE_URL.replace(/\/+$/,'');
-            const link = `${jiraBase}/browse/${ticket}`;
-
-            // 2) Zbuduj "ludzki" temat z reszty nazwy brancha
-            function humanize(str) {
-              if (!str) return '';
-              str = str.replace(/\//g, '-').replace(/^[-_]+/, '');
-              str = str.replace(/[-_]+/g, ' ').trim();
-              return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
-            }
-            let subject = '';
-            const afterTicket = branch.split(ticket)[1] || '';
-            subject = humanize(afterTicket) || humanize(branch.split('/').pop());
-
-            const newTitle = subject ? `${ticket}: ${subject}` : ticket;
-
-            // 3) Przygotuj nową treść: podmień placeholdery z template'u
+            const link = `${jiraBase}/browse/${ticketUpper}`;
             let body = origBody;
 
-            // a) Nagłówek "# 📝 ..." → "# 📝 TICKET"
-            const headerRe = /^#\s*📝[^\n]*$/m;
-            if (headerRe.test(body)) {
-              body = body.replace(headerRe, `# 📝 ${ticket}`);
-            } else if (!body.includes(ticket)) {
-              // jeśli brak nagłówka, dolej na górę
-              body = `# 📝 ${ticket}\n\n${body}`;
-            }
+            // a) Nagłówek "# 📝 JIRA-123" -> "# 📝 FLEX-124"
+            body = body.replace(/^#\s*📝[^\n]*$/m, `# 📝 ${ticketUpper}`);
 
-            // b) Wiersz tabeli "Jira ticket" → link do Jiry
-            const tableRowRe = /\|\s*Jira ticket\s*\|\s*[^\|]*\|/i;
-            if (tableRowRe.test(body)) {
-              body = body.replace(tableRowRe, `| Jira ticket  | [${ticket}](${link}) |`);
-            }
+            // b) Wiersz tabeli "Jira ticket" -> link do Jiry
+            body = body.replace(/\|\s*Jira ticket\s*\|\s*[^\|]*\|/i,
+                                `| Jira ticket  | [${ticketUpper}](${link}) |`);
 
-            // c) Podmień sztywne placeholdery z przykładu
+            // c) Dodatkowo podmień surowe placeholdery z przykładu
             body = body
-              .replace(/\bJIRA-123\b/g, ticket)
-              .replace(/https:\/\/jira\.example\.com\/browse\/JIRA-123/g, link)
-              .replace(/{{\s*TICKET\s*}}/g, ticket) // jeśli kiedyś dodasz placeholdery
-              .replace(new RegExp(`${jiraBase.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}/browse/{{\\s*TICKET\\s*}}`, 'g'), link);
+              .replace(/\bJIRA-123\b/gi, ticketUpper)
+              .replace(/https:\/\/jira\.example\.com\/browse\/JIRA-123/gi, link);
 
-            // d) Jeśli nie ma w ogóle sekcji/wiersza, dolej krótkie info na górze
-            if (!/Jira ticket/i.test(body) && !body.includes(link)) {
-              body = `**Jira:** ${link}\n\n${body}`;
-            }
-
-            // 4) Zaktualizuj tylko, jeśli coś się zmieniło
-            const needTitle = currentTitle !== newTitle && !currentTitle.startsWith(ticket);
+            // 5) Aktualizacja tylko jeśli potrzeba
+            const needTitle = newTitle && currentTitle !== newTitle;
             const needBody = body !== origBody;
 
             if (!needTitle && !needBody) {
@@ -93,4 +77,4 @@ jobs:
               body: needBody ? body : origBody
             });
 
-            core.notice(`Zastosowano: ${needTitle ? 'tytuł' : ''}${needTitle && needBody ? ' + ' : ''}${needBody ? 'treść' : ''}.`);
+            core.notice(`Ustawiono: ${needTitle ? 'tytuł' : ''}${needTitle && needBody ? ' + ' : ''}${needBody ? 'treść' : ''}.`);
