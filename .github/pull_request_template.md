@@ -1,4 +1,4 @@
-# 📝 JIRA-123
+# 📝 {{TICKET}}
 
 ---
 
@@ -6,7 +6,7 @@
 
 | Typ          | Link |
 |--------------|------|
-| Jira ticket  | [JIRA-123](https://jira.example.com/browse/JIRA-123) |
+| Jira ticket  | [{{TICKET}}](https://remedia-it.atlassian.net/browse/{{TICKET}}) |
 | Dokumentacja | [Confluence](https://confluence.example.com/...) |
 
 ---
