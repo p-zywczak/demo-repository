@@ -1,4 +1,4 @@
-name: Auto PR title & body from branch
+name: Auto PR title & fill {{TICKET}}
 
 on:
   pull_request:
@@ -7,65 +7,48 @@ on:
 permissions:
   pull-requests: write
 
-env:
-  # 👇 ZMIEŃ na swoją instancję Jiry (bez końcowego '/')
-  JIRA_BASE_URL: https://jira.example.com
-
 jobs:
   apply:
-    # Bezpiecznie: tylko PR-y z tego samego repo (nie z forków)
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
-      - name: Set PR title & replace template placeholders
+      - name: Set PR title & replace {{TICKET}}
         uses: actions/github-script@v7
         with:
           script: |
             const pr = context.payload.pull_request;
-            const branch = pr.head.ref; // np. feat/flex-124-zadanie
+            const branch = pr.head.ref;
             const currentTitle = pr.title || '';
             const origBody = pr.body || '';
 
-            // 1) Segments & ticket
-            const typeSeg = (branch.split('/')[0] || '').toLowerCase(); // feat, fix, chore...
             const m = branch.match(/([a-zA-Z][a-zA-Z0-9]+-\d+)/i);
-            if (!m) { core.notice('Nie znaleziono klucza JIRA w nazwie brancha.'); return; }
-            const ticketRaw = m[1];               // np. flex-124
-            const ticketLower = ticketRaw.toLowerCase(); // flex-124
-            const ticketUpper = ticketRaw.toUpperCase(); // FLEX-124
+            if (!m) {
+              core.notice('No JIRA key found in the branch name.');
+              return;
+            }
+            const ticketRaw = m[1];
+            const ticketUpper = ticketRaw.toUpperCase();
+            const ticketLower = ticketRaw.toLowerCase();
 
-            // 2) Subject po kluczu (np. "-zadanie" -> "zadanie")
+            // Zbuduj "subject" po kluczu (np. "-zadanie" -> "zadanie")
             const idx = branch.toLowerCase().indexOf(ticketLower);
             let after = idx >= 0 ? branch.slice(idx + ticketRaw.length) : '';
-            after = after.replace(/^[\/\-\_]+/, '');     // utnij wiodące / - _
-            const subject = after.replace(/[-_]+/g, ' ').trim(); // "zadanie" / "cos tam"
+            after = after.replace(/^[\/\-\_]+/, '');
+            const subject = after.replace(/[-_]+/g, ' ').trim();
 
-            // 3) Tytuł: "feat/flex-124: zadanie" (lub bez subject)
+            // Tytuł: "<typ>/<ticketLower>: <subject>" (np. "feat/flex-124: zadanie")
+            const typeSeg = (branch.split('/')[0] || '').toLowerCase(); // feat / fix / chore...
             const newTitle = `${typeSeg}/${ticketLower}` + (subject ? `: ${subject}` : '');
 
-            // 4) Treść PR – podmień placeholdery z Twojego szablonu
-            const jiraBase = process.env.JIRA_BASE_URL.replace(/\/+$/,'');
-            const link = `${jiraBase}/browse/${ticketUpper}`;
-            let body = origBody;
+            // Treść PR: podmień wszystkie wystąpienia {{TICKET}}
+            let body = origBody.replace(/{{\s*TICKET\s*}}/g, ticketUpper);
 
-            // a) Nagłówek "# 📝 JIRA-123" -> "# 📝 FLEX-124"
-            body = body.replace(/^#\s*📝[^\n]*$/m, `# 📝 ${ticketUpper}`);
-
-            // b) Wiersz tabeli "Jira ticket" -> link do Jiry
-            body = body.replace(/\|\s*Jira ticket\s*\|\s*[^\|]*\|/i,
-                                `| Jira ticket  | [${ticketUpper}](${link}) |`);
-
-            // c) Dodatkowo podmień surowe placeholdery z przykładu
-            body = body
-              .replace(/\bJIRA-123\b/gi, ticketUpper)
-              .replace(/https:\/\/jira\.example\.com\/browse\/JIRA-123/gi, link);
-
-            // 5) Aktualizacja tylko jeśli potrzeba
+            // Aktualizuj PR tylko gdy coś się zmienia
             const needTitle = newTitle && currentTitle !== newTitle;
-            const needBody = body !== origBody;
+            const needBody  = body !== origBody;
 
             if (!needTitle && !needBody) {
-              core.info('Brak zmian do zastosowania.');
+              core.info('No changes to apply.');
               return;
             }
 
