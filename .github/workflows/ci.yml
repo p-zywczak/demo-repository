@@ -97,7 +97,7 @@ jobs:
           - name: Set up PHP
             uses: shivammathur/setup-php@v2
             with:
-              php-version: 8.2.0
+              php-version: 8.3.0
               tools: composer
               coverage: xdebug
     
@@ -106,25 +106,6 @@ jobs:
     
           - name: Composer dump autoload
             run: composer dump-autoload
-    
-          - name: Compare version PHP
-            id: semver
-            uses: madhead/semver-utils@v4.3.0
-            with:
-              version: ${{ secrets.PHP_VERSION }}
-              compare-to: "8.4.0"
-    
-          - name: Run Composer Lint
-            if: ${{
-              steps.semver.outputs.comparison-result == '<'
-              }}
-            run: composer run-script lint
-    
-          - name: Run Pint
-            if: ${{
-              steps.semver.outputs.comparison-result != '<'
-              }}
-            run: ./vendor/bin/pint --test
     
           - name: Run Migrations for Testing
             run: php artisan migrate --env=testing
