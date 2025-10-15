@@ -97,7 +97,7 @@ jobs:
           - name: Set up PHP
             uses: shivammathur/setup-php@v2
             with:
-              php-version: ${{ secrets.PHP_VERSION }}
+              php-version: 8.2.0
               tools: composer
               coverage: xdebug
     
