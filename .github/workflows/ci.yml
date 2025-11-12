@@ -178,9 +178,5 @@ jobs:
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            📝 **Szablon PR:** `${{ steps.parse.outputs.template }}`
-            ---
-            ```
             ${{ steps.get-template.outputs.content }}
-            ```  
 
