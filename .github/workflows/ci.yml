@@ -147,3 +147,40 @@ jobs:
               echo "- Percent: **${{ steps.cov.outputs.percent }}%**" >> $GITHUB_STEP_SUMMARY
               echo "- Covered: **${{ steps.cov.outputs.covered }}** / **${{ steps.cov.outputs.total }}**" >> $GITHUB_STEP_SUMMARY
 
+  commands:
+    name: 'Commands'
+    if: github.event.issue.pull_request != null && startsWith(github.event.comment.body, '/template-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wybierz odpowiedni template
+        id: parse
+        run: |
+          CMD=$(echo "${{ github.event.comment.body }}" | tr -d '[:space:]')
+          case "$CMD" in
+            "/template-frontend") TEMPLATE="feat-fe.md" ;;
+            "/template-backend") TEMPLATE="feat-be.md" ;;
+            "/template-fix") TEMPLATE="fix.md" ;;
+            "/template-release") TEMPLATE="release.md" ;;
+            *) echo "Nieznane polecenie: $CMD"; exit 1 ;;
+          esac
+          echo "template=$TEMPLATE" >> $GITHUB_OUTPUT
+
+      - name: Pobierz treść templatki z publicznego repo
+        id: get-template
+        run: |
+          CONTENT=$(curl -sL "https://raw.githubusercontent.com/RemediaIt/.github/main/PULL_REQUEST_TEMPLATE/${{ steps.parse.outputs.template }}")
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Dodaj komentarz z templatką
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            📝 **Szablon PR:** `${{ steps.parse.outputs.template }}`
+            ---
+            ```
+            ${{ steps.get-template.outputs.content }}
+            ```  
+
